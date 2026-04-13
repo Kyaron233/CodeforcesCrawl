@@ -1,0 +1,12 @@
+{
+    "cmake.generator": "MinGW Makefiles",
+    "cmake.preferredGenerators": [
+        "MinGW Makefiles"
+    ],
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.configureSettings": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_MAKE_PROGRAM": "mingw32-make"
+    }
+}

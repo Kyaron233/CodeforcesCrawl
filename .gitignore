@@ -1,0 +1,27 @@
+# CMake / build artifacts
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/compile_commands.json
+/Makefile
+/install_manifest.txt
+/CTestTestfile.cmake
+/Testing/
+/CMakeScripts/
+/cmake-build-*/
+
+# VS Code workspace files
+/.vscode/*
+!/.vscode/settings.json
+!/.vscode/extensions.json
+
+# vcpkg generated artifacts (keep vcpkg source itself)
+/vcpkg/buildtrees/
+/vcpkg/packages/
+/vcpkg/downloads/
+/vcpkg/installed/
+
+# OS junk
+Thumbs.db
+.DS_Store
