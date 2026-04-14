@@ -1,0 +1,13 @@
+{
+  "name": "codeforce",
+  "version": "1.0.0",
+  "dependencies": [
+    {
+      "name": "curl",
+      "default-features": false,
+      "features": [
+        "openssl"
+      ]
+    }
+  ]
+}

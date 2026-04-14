@@ -1,0 +1,2 @@
+cmake -S . -B build-cmd -G "MinGW Makefiles" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_MAKE_PROGRAM=mingw32-make -DCMAKE_TOOLCHAIN_FILE="g:/Documents/Projects/codeforce/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_MANIFEST_MODE=ON -DVCPKG_OVERLAY_TRIPLETS="g:/Documents/Projects/codeforce/triplets" -DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic-vista -DVCPKG_HOST_TRIPLET=x64-mingw-dynamic-vista
+cmake --build build-cmd -j 4
