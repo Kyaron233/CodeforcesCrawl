@@ -1,0 +1,22 @@
+Package: vcpkg-cmake
+Version: 2024-04-23
+Architecture: x64-mingw-dynamic-vista
+Multi-Arch: same
+Abi: 68aec8c36490d54652e1637cb2a79b27a10d0c4240fa270d4f0122803882a392
+Status: install ok installed
+
+Package: vcpkg-cmake-get-vars
+Version: 2025-05-29
+Depends: vcpkg-cmake
+Architecture: x64-mingw-dynamic-vista
+Multi-Arch: same
+Abi: 71185d81f0134aba4004c3c811a6fa2fe73addf2aa98fe94c919e62d51ad135c
+Status: install ok installed
+
+Package: vcpkg-cmake-config
+Version: 2024-05-23
+Architecture: x64-mingw-dynamic-vista
+Multi-Arch: same
+Abi: 0bac52ca73e2e0aba099147b1b4a6dd54b63051c5a118161c6596fe2f8d47999
+Status: install ok installed
+

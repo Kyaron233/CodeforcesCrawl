@@ -1,0 +1,10 @@
+if(NOT DEFINED SRC_DIR OR NOT DEFINED DST_DIR)
+    message(FATAL_ERROR "SRC_DIR and DST_DIR must be provided")
+endif()
+
+if(EXISTS "${SRC_DIR}")
+    file(GLOB _runtime_dlls "${SRC_DIR}/*.dll")
+    if(_runtime_dlls)
+        file(COPY ${_runtime_dlls} DESTINATION "${DST_DIR}")
+    endif()
+endif()

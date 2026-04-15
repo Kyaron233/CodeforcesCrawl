@@ -1,0 +1,14 @@
+{
+  "F:/x86_64-8.1.0-release-win32-sjlj-rt_v6-rev0/mingw64/bin/x86_64-w64-mingw32-g++.exe" : 
+  {
+    "hash" : "aa85e11dec5ceba9b345453720c7d0d9848f00c6",
+    "size" : 1961984,
+    "timestamp" : 1526141223
+  },
+  "F:/x86_64-8.1.0-release-win32-sjlj-rt_v6-rev0/mingw64/bin/x86_64-w64-mingw32-gcc.exe" : 
+  {
+    "hash" : "1d1cf302b3a250c3609ef6ca8dcd90780815994f",
+    "size" : 1959424,
+    "timestamp" : 1526141260
+  }
+}

@@ -21,3 +21,21 @@ target_include_directories(codeforce PRIVATE
 )
 
 target_link_libraries(codeforce PRIVATE CURL::libcurl)
+
+if(WIN32)
+    add_custom_command(TARGET codeforce POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_RUNTIME_DLLS:codeforce>
+            $<TARGET_FILE_DIR:codeforce>
+        COMMAND ${CMAKE_COMMAND}
+            -DSRC_DIR=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/debug/bin
+            -DDST_DIR=$<TARGET_FILE_DIR:codeforce>
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_runtime_dlls.cmake
+        COMMAND ${CMAKE_COMMAND}
+            -DSRC_DIR=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin
+            -DDST_DIR=$<TARGET_FILE_DIR:codeforce>
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_runtime_dlls.cmake
+        COMMAND_EXPAND_LISTS
+        VERBATIM
+    )
+endif()

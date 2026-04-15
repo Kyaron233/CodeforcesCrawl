@@ -28,7 +28,7 @@
       "name": "mingw-vcpkg-build",
       "displayName": "Build (MinGW + vcpkg)",
       "configurePreset": "mingw-vcpkg",
-      "jobs": 4
+      "jobs": 10
     }
   ]
 }
