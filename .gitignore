@@ -10,7 +10,7 @@
 /Testing/
 /CMakeScripts/
 /cmake-build-*/
-
+/build-cmd/
 # VS Code workspace files
 /.vscode/*
 !/.vscode/settings.json

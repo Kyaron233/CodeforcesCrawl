@@ -15,9 +15,11 @@ find_package(CURL REQUIRED)
 add_executable(codeforce 
     src/main.c
     cJSON/cJSON.c
+    src/utils/utils.c
     )
 target_include_directories(codeforce PRIVATE
     "cJSON"
+    "src/include"
 )
 
 target_link_libraries(codeforce PRIVATE CURL::libcurl)
