@@ -40,4 +40,22 @@ if(WIN32)
         COMMAND_EXPAND_LISTS
         VERBATIM
     )
+elseif(UNIX AND NOT APPLE)
+    # Keep runtime lookup local to executable directory after packaging.
+    set_target_properties(codeforce PROPERTIES
+        BUILD_RPATH "$ORIGIN"
+        INSTALL_RPATH "$ORIGIN"
+    )
+
+    add_custom_command(TARGET codeforce POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+            -DSRC_DIR=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/debug/lib
+            -DDST_DIR=$<TARGET_FILE_DIR:codeforce>
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_runtime_shared_libs.cmake
+        COMMAND ${CMAKE_COMMAND}
+            -DSRC_DIR=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib
+            -DDST_DIR=$<TARGET_FILE_DIR:codeforce>
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_runtime_shared_libs.cmake
+        VERBATIM
+    )
 endif()
