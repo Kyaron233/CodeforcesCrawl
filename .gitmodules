@@ -1,7 +1,7 @@
 [submodule "cJSON"]
-    path = cJSON/
+    path = cJSON
     url = https://github.com/DaveGamble/cJSON.git
 
 [submodule "vcpkg"]
-    path = vcpkg/
+    path = vcpkg
     url = https://github.com/microsoft/vcpkg.git

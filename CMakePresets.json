@@ -7,19 +7,49 @@
   },
   "configurePresets": [
     {
+      "name": "vcpkg-base",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_MANIFEST_MODE": "ON"
+      }
+    },
+    {
       "name": "mingw-vcpkg",
+      "inherits": "vcpkg-base",
       "displayName": "MinGW + vcpkg (vista triplet)",
       "generator": "MinGW Makefiles",
-      "binaryDir": "${sourceDir}/build",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "binaryDir": "${sourceDir}/build/windows",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_MAKE_PROGRAM": "mingw32-make",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_MANIFEST_MODE": "ON",
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/triplets",
         "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic-vista",
         "VCPKG_HOST_TRIPLET": "x64-mingw-dynamic-vista"
+      }
+    },
+    {
+      "name": "linux-vcpkg",
+      "inherits": "vcpkg-base",
+      "displayName": "Linux + vcpkg (x64-linux)",
+      "generator": "Unix Makefiles",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "binaryDir": "${sourceDir}/build/linux",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux"
       }
     }
   ],
@@ -28,6 +58,12 @@
       "name": "mingw-vcpkg-build",
       "displayName": "Build (MinGW + vcpkg)",
       "configurePreset": "mingw-vcpkg",
+      "jobs": 10
+    },
+    {
+      "name": "linux-vcpkg-build",
+      "displayName": "Build (Linux + vcpkg)",
+      "configurePreset": "linux-vcpkg",
       "jobs": 10
     }
   ]
