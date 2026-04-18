@@ -8,3 +8,27 @@ cmake --build build-cmd -j 4
 本项目提供两个脚本，分别用于windows和Linux平台的编译。
 使用`cmake`进行编译后，在命令行执行`./build/codeforce.exe` （或`./build/codeforce`如果使用的不是Windows平台）
 程序执行后，在`./resource/`目录下存放我们获取到的资源。
+
+## 2.项目结构
+整个项目的目录如下
+```
+CodeforcesCrawler/
+|—— build/ *生成构建产物*
+|—— cJSON/ *cJSON，用于解析JSON*
+|—— cmake/ *编译时引用到的cmake文件，用于复制共享库等内容*
+|—— triplets/ *编译时引用到的cmake文件，用于标志架构*
+|—— vcpkg/ *vcpkg，用于管理项目使用到的依赖*
+|—— vcpkg.json
+|—— src/ *C语言程序目录*
+    |—— crawler *爬虫*
+    |—— parser *解析json*
+    |—— utils *工具类*
+    |__ main.c
+|—— log/ *日志文件*
+|—— .gitignore
+|—— .gitmodules
+|—— README.md *本说明文档*
+|—— run.bat *Windows下的运行脚本*
+|—— run.sh *Linux下的运行脚本*
+
+```
