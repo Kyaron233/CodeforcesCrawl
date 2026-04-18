@@ -33,12 +33,13 @@ int main(int argc, char *argv[]) {
                 username[sizeof(username) - 1] = '\0';
                 break;
             default:
-                fprintf(stderr, "Unknown option: %c\n", opt);
+                fprintf(stderr, "未知选项：%c\n。使用--help查看帮助信息", opt);
                 return 1;
         }
     }
     // 这里的logger_init主要是能否成功打开日志文件，失败了就只能输出到控制台了
-    if(!logger_init()) {
+    // 日志放在log/log.txt，按照规范输出日志。使用a模式打开文件，所有的内容都追加到文件末尾
+    if(logger_init()==NULL) {
         fprintf(stderr, "日志文件初始化失败，使用控制台输出\n");
     }
 

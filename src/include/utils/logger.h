@@ -17,9 +17,10 @@
 #define LOG_ERROR(fmt, ...) fprintf(stderr, COLOR_ERROR "[ERROR] %s:%d: " fmt COLOR_RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 
 typedef enum {
-    INFO, // 正常运行时的输出
-    WARNING, // 可能会导致问题的输出
-    ERROR // 发生错误时的输出，只能是程序直接崩溃了才能输出ERROR
+    INFO = 0, // 正常运行时的输出
+    WARNING = 1, // 可能会导致问题的输出
+    ERROR = 2 // 发生错误时的输出，只能是程序直接崩溃了才能输出ERROR
 } LogLevel;
 
+int logger_init(); // 初始化日志文件，主要是打开日志文件，如果失败了就只能输出到控制台了
 void log_message(LogLevel level, const char* message);
