@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "utils/logger.h"
+#include "crawler/crawler.h"
 #include <stdlib.h>
 #include <getopt.h>
 #include <curl/curl.h>
@@ -14,10 +15,12 @@ static struct option long_options[] = {
     {"username", required_argument, 0, 'U'},
     {0, 0, 0, 0}
 };
+// 我把用户名和文件名拿出来了 感觉不能放在栈上
+char username[200]; // 200应该够了吧。。
+char output_filename[200]; // 也是200。注意这个文件名可能是存在的也可能是不存在的
 int main(int argc, char *argv[]) {
     int opt;
-    char username[200]; // 200应该够了吧。。
-    char output_filename[200]; // 也是200。注意这个文件名可能是存在的也可能是不存在的
+
     while((opt = getopt_long(argc, argv, "hO:U:", long_options, NULL)) != -1) {
         switch(opt) {
             case 'h':
@@ -44,10 +47,5 @@ int main(int argc, char *argv[]) {
     }
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
-    CURL *curl = curl_easy_init();
-    if(curl == NULL) {
-        log_message(ERROR, "curl初始化失败");
-        return -1;
-    }
 
 }
