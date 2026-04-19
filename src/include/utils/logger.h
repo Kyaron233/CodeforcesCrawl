@@ -16,6 +16,22 @@
 #define LOG_WARN(fmt, ...)  fprintf(stdout, COLOR_WARN  "[WARN]  %s:%d: " fmt COLOR_RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #define LOG_ERROR(fmt, ...) fprintf(stderr, COLOR_ERROR "[ERROR] %s:%d: " fmt COLOR_RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 
+
+/*
+TODO：1.首先我要重构一下项目结构了
+我觉得在main.c和其他的业务中间应该再套一层controller，main.c就只管启动。controller负责调度
+TODO: 2.把执行信息丢给controller，让controller来做出对应行为，或者写日志啥的
+但是在这里又有几个问题
+1.我的日志的msg怎么办，c好像对字符串的支持不是很好 一个想法是就直接用char*作为结构体的成员了，应该只要能把\0写好就行...（吧？）
+2.日志又该有几层呢？
+3.我的status结构体能不能在libcurl,cJSON和compositor直接复用呢（他们的字段肯定不完全一样）
+# btw ， 这个compositor是跟前端交互的组件，我先这样叫（
+TODO: 3.注意到curl本身是有很多关于错误处理的变量的定义的，也有errbuf之类的东西（详见“优化日志和错误处理逻辑”这一篇对话），得想想怎么利用好这玩意
+*/
+typedef struct{
+    
+}Status;
+
 typedef enum {
     INFO = 0, // 正常运行时的输出
     WARNING = 1, // 可能会导致问题的输出
