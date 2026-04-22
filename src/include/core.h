@@ -31,6 +31,7 @@ typedef struct {
     Response resp;
 } Status;
 
-typedef struct {
-    Data MatchListData;
-} CoreData;
+typedef enum {
+    MatchListData = 0,
+    UserRatingData = 1 
+} quene;

@@ -86,7 +86,7 @@ Data getMatchList(Status* status) {
     log_message(INFO,"正在执行getMatchList...");
     curl_easy_reset(curl);
     set_custom_options(curl);
-    curl_easy_setopt(curl, CURLOPT_URL, BASE_URL "/contest.list");
+    curl_easy_setopt(curl, CURLOPT_URL, BASE_URL "/contest.list?gym=false"); // 不获取gym的数据
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA,(void*)&data);
     if (status != NULL) {
@@ -109,6 +109,65 @@ Data getMatchList(Status* status) {
 
         // snprintf(log_buffer, sizeof(log_buffer), "getMatchList出错：curl_code=%d, detail=%s", (int)code, detail);
         // log_message(ERROR, log_buffer);
+    }
+    else {
+        if (status != NULL) {
+            fill_response_meta(curl, &status->resp);
+            status->curl_code = code;
+
+            if (status->resp.http_code >= 200 && status->resp.http_code < 300 && data.chunk != NULL && data.size > 0) {
+                status->status = STATUS_OK;
+                status->msg = "请求成功";
+            } else {
+                status->status = STATUS_HTTP_ERROR;
+                status->msg = "HTTP状态异常或响应体为空";
+            }
+        }
+    }
+    return data;
+}
+
+Data getUserAttendedMatchList(Status* status,char* username){
+    Data data = {0};
+    init_status(status);
+
+    CURL *curl = getCurl();
+    if(curl==NULL) {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_FAILED_INIT;
+            status->msg = "curl句柄初始化失败";
+        }
+        return data;
+    }
+
+    CURLcode code;
+    char completed_url[100];
+    sprintf(completed_url,"%s/user.rating?handle=%s",BASE_URL,username);
+    log_message(INFO,"正在执行getUserAttendedMatchList...");
+    curl_easy_reset(curl);
+    set_custom_options(curl);
+    curl_easy_setopt(curl, CURLOPT_URL,completed_url); // https://codeforces.com/api/user.rating?handle={username}
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,(void*)&data);
+    if (status != NULL) {
+        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, status->curl_error);
+    }
+
+    code = curl_easy_perform(curl);
+
+    if(code != CURLE_OK) {
+        char log_buffer[512];
+        const char* detail = curl_easy_strerror(code);
+
+        if (status != NULL) {
+            status->status = STATUS_CURL_ERROR;
+            status->curl_code = code;
+            fill_response_meta(curl, &status->resp);
+            status->msg = (status->curl_error[0] != '\0') ? status->curl_error : curl_easy_strerror(code);
+            detail = status->msg;
+        }
+
     }
     else {
         if (status != NULL) {
