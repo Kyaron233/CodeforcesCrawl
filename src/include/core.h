@@ -32,6 +32,6 @@ typedef struct {
 } Status;
 
 typedef enum {
-    MatchListData = 0,
+    ContestListData = 0,
     UserRatingData = 1 
 } quene;

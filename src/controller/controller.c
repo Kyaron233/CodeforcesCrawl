@@ -12,7 +12,7 @@ static Status corestatus[CURL_QUENE];
 
 
 static const char* get_task_name(quene task_order) {
-    if (task_order == MatchListData) {
+    if (task_order == ContestListData) {
         return "获取全部比赛列表";
     }
     if (task_order == UserRatingData) {
@@ -48,10 +48,10 @@ void startApp(char* username){
    // 写给自己：为什么不把两个函数封装到一个逻辑呢？
    // 因为我不知道需要哪些参数，导致签名不同，这玩意又不能像go一样传指针这么方便
    // 至少我现在没想到解决方案好吧 （0422，17:38）
-   coredata[MatchListData] =  getMatchList(&corestatus[MatchListData]);
-   check(MatchListData);
+   coredata[ContestListData] =  getContestList(&corestatus[ContestListData]);
+   check(ContestListData);
 
-   coredata[UserRatingData] = getUserAttendedMatchList(&corestatus[UserRatingData],username);
+   coredata[UserRatingData] = getUserAttendedContestList(&corestatus[UserRatingData],username);
    check(UserRatingData);
 
    

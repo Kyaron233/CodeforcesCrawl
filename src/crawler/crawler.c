@@ -68,7 +68,7 @@ CURL* getCurl(){
 }
 // “2.	抓取比赛列表和用户参加比赛的列表” 
 // 获取比赛列表，注意并不全是用户参加的比赛。
-Data getMatchList(Status* status) {
+Data getContestList(Status* status) {
     Data data = {0};
     init_status(status);
 
@@ -83,7 +83,7 @@ Data getMatchList(Status* status) {
     }
 
     CURLcode code;
-    log_message(INFO,"正在执行getMatchList...");
+    log_message(INFO,"正在执行getContestList...");
     curl_easy_reset(curl);
     set_custom_options(curl);
     curl_easy_setopt(curl, CURLOPT_URL, BASE_URL "/contest.list?gym=false"); // 不获取gym的数据
@@ -107,8 +107,7 @@ Data getMatchList(Status* status) {
             detail = status->msg;
         }
 
-        // snprintf(log_buffer, sizeof(log_buffer), "getMatchList出错：curl_code=%d, detail=%s", (int)code, detail);
-        // log_message(ERROR, log_buffer);
+
     }
     else {
         if (status != NULL) {
@@ -127,7 +126,7 @@ Data getMatchList(Status* status) {
     return data;
 }
 
-Data getUserAttendedMatchList(Status* status,char* username){
+Data getUserAttendedContestList(Status* status,char* username){
     Data data = {0};
     init_status(status);
 
@@ -144,7 +143,7 @@ Data getUserAttendedMatchList(Status* status,char* username){
     CURLcode code;
     char completed_url[100];
     sprintf(completed_url,"%s/user.rating?handle=%s",BASE_URL,username);
-    log_message(INFO,"正在执行getUserAttendedMatchList...");
+    log_message(INFO,"正在执行getUserAttendedContestList...");
     curl_easy_reset(curl);
     set_custom_options(curl);
     curl_easy_setopt(curl, CURLOPT_URL,completed_url); // https://codeforces.com/api/user.rating?handle={username}

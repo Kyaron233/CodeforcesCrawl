@@ -6,5 +6,5 @@
 #define BASE_URL "https://codeforces.com/api"
 
 
-Data getMatchList(Status* status); // 获取比赛列表
-Data getUserAttendedMatchList(Status* status, char* username); // 获取用户参加过的比赛的列表
+Data getContestList(Status* status); // 获取比赛列表
+Data getUserAttendedContestList(Status* status, char* username); // 获取用户参加过的比赛的列表
