@@ -3,25 +3,57 @@
 #include <curl/curl.h>
 #include "utils/logger.h"
 #include "crawler/crawler.h"
+#define CURL_QUENE 10  // 这里是我们需要使用curl请求数据的次数
 // 一个任务一个函数，一个函数一个status
-void check(){}
-CoreData coredata;
+
+// 这里用static有问题吗
+static Data coredata[CURL_QUENE];
+static Status corestatus[CURL_QUENE];
+
+
+static const char* get_task_name(quene task_order) {
+    if (task_order == MatchListData) {
+        return "获取全部比赛列表";
+    }
+    if (task_order == UserRatingData) {
+        return "获取用户参赛列表";
+    }
+    return "未知任务";
+}
+
+void check(quene task_order){
+    const char* taskname = get_task_name(task_order);
+    char message[128];
+
+    if(corestatus[task_order].status == STATUS_OK) {
+        snprintf(message, sizeof(message), "%s执行完毕。", taskname);
+        log_message(INFO, message);
+    }
+    else {
+        LogLevel level = coredata[task_order].size == 0 ? ERROR : WARNING;
+        snprintf(message, sizeof(message), "%s未正常执行", taskname);
+        log_message(level, message);
+        detailed_log(&corestatus[task_order]);
+    }
+}
+
 void startApp(char* username){
     curl_global_init(CURL_GLOBAL_DEFAULT);
-    if(logger_init) {
+    if(logger_init()) {
         fprintf(stderr, "日志文件初始化失败，使用控制台输出\n");
     }
    log_message(INFO,"开始执行任务...");
+   
 
-   Status MatchListStatus;
-   coredata.MatchListData =  getMatchList(&MatchListStatus);
-   if(MatchListStatus.status == STATUS_OK) {
-    log_message(INFO,"获取全部比赛列表执行完毕。");
-   }
-   else {
-        LogLevel level = coredata.MatchListData.size==0?ERROR:WARNING;
-        log_message(level,"获取全部比赛列表未正常执行");
-        detailed_log(&MatchListStatus);
-   }
+   // 写给自己：为什么不把两个函数封装到一个逻辑呢？
+   // 因为我不知道需要哪些参数，导致签名不同，这玩意又不能像go一样传指针这么方便
+   // 至少我现在没想到解决方案好吧 （0422，17:38）
+   coredata[MatchListData] =  getMatchList(&corestatus[MatchListData]);
+   check(MatchListData);
+
+   coredata[UserRatingData] = getUserAttendedMatchList(&corestatus[UserRatingData],username);
+   check(UserRatingData);
+
+   
 }
 
