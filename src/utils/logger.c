@@ -20,10 +20,6 @@ int logger_init() {
 
 void log_message(LogLevel level, const char* message) {
     FILE* logger = global_logger; 
-    if(logger == NULL) {
-        fprintf(stderr, "无法打开日志文件!，请检查文件权限\n");
-        return;
-    }
     const char* level_str;
     switch(level) {
         case INFO:
@@ -39,7 +35,7 @@ void log_message(LogLevel level, const char* message) {
             level_str = "UNKNOWN";
     }
     // 输出到文件
-    fprintf(logger, "[%s] %s\n", level_str, message);
+    if(logger != NULL) fprintf(logger, "[%s] %s\n", level_str, message);
     
     // 输出到控制台
     switch(level) {
