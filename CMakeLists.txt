@@ -11,18 +11,21 @@ endif()
 project(codeforce C) 
 
 find_package(CURL REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 add_executable(codeforce 
     src/main.c
     cJSON/cJSON.c
-    src/utils/utils.c
+    src/utils/arg_utils.c
+    src/utils/logger.c
+    src/utils/api_compositor.c
     )
 target_include_directories(codeforce PRIVATE
     "cJSON"
     "src/include"
 )
 
-target_link_libraries(codeforce PRIVATE CURL::libcurl)
+target_link_libraries(codeforce PRIVATE CURL::libcurl OpenSSL::Crypto)
 
 if(WIN32)
     add_custom_command(TARGET codeforce POST_BUILD
