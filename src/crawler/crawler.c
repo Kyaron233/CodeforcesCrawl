@@ -7,7 +7,7 @@
 #include "core.h"
 
 static CURL *global_curl = NULL; 
-
+static char apikey[200] = '\0';
 // 进阶版的日志
 static void init_status(Status* status) {
     if (status == NULL) {
@@ -142,7 +142,7 @@ Data getUserAttendedContestList(Status* status,char* username){
 
     CURLcode code;
     char completed_url[100];
-    sprintf(completed_url,"%s/user.rating?handle=%s",BASE_URL,username);
+    sprintf(completed_url,"%s%s/user.rating?handle=%s",BASE_URL,apikey,username);
     log_message(INFO,"正在执行getUserAttendedContestList...");
     curl_easy_reset(curl);
     set_custom_options(curl);
@@ -184,3 +184,4 @@ Data getUserAttendedContestList(Status* status,char* username){
     }
     return data;
 }
+Data 
