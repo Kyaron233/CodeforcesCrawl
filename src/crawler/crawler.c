@@ -7,7 +7,7 @@
 #include "core.h"
 
 static CURL *global_curl = NULL; 
-static char apikey[200] = '\0';
+static char apikey[200] = {'\0'};
 // 进阶版的日志
 static void init_status(Status* status) {
     if (status == NULL) {
@@ -53,6 +53,8 @@ size_t write_callback(char* data,size_t size,size_t nmemb,void* userp){
 void set_custom_options(CURL *curl) {
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L); // 设置超时时间为10秒
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L); // 允许重定向
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
 }
 CURL* getCurl(){
     if(global_curl!=NULL) return global_curl;
@@ -139,7 +141,24 @@ Data getUserAttendedContestList(Status* status,char* username){
         }
         return data;
     }
-
+    
+    // TODO : 这里如果返回401，就改用带有token的链接（？
+    // 这个函数(/api/user.rating?handle={username})查出来的result长这样
+    /*
+    {
+  "status": "OK",
+  "result": [
+    {
+      "contestId": 2,
+      "contestName": "Codeforces Beta Round 2",
+      "handle": "tourist",
+      "rank": 14,
+      "ratingUpdateTimeSeconds": 1267124400,
+      "oldRating": 0,
+      "newRating": 1602
+    }
+    # PS:result是个数组，我没截完，大概这样反正
+    */
     CURLcode code;
     char completed_url[100];
     sprintf(completed_url,"%s%s/user.rating?handle=%s",BASE_URL,apikey,username);
@@ -184,4 +203,291 @@ Data getUserAttendedContestList(Status* status,char* username){
     }
     return data;
 }
-Data 
+
+Data getUserStatus(Status* status,char* username){
+    Data data = {0};
+    init_status(status);
+
+    if (username == NULL || username[0] == '\0') {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_OK;
+            status->msg = "用户名为空";
+        }
+        return data;
+    }
+
+    CURL *curl = getCurl();
+    if(curl==NULL) {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_FAILED_INIT;
+            status->msg = "curl句柄初始化失败";
+        }
+        return data;
+    }
+
+    CURLcode code;
+    char completed_url[200];
+    int written = snprintf(completed_url, sizeof(completed_url), "%s/user.status?handle=%s", BASE_URL, username);
+    if (written < 0 || written >= (int)sizeof(completed_url)) {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_OK;
+            status->msg = "请求URL过长";
+        }
+        return data;
+    }
+
+    log_message(INFO,"正在执行getUserStatus...");
+    curl_easy_reset(curl);
+    set_custom_options(curl);
+    curl_easy_setopt(curl, CURLOPT_URL, completed_url); // https://codeforces.com/api/user.status?handle={username}
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,(void*)&data);
+    if (status != NULL) {
+        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, status->curl_error);
+    }
+
+    code = curl_easy_perform(curl);
+
+    if(code != CURLE_OK) {
+        if (status != NULL) {
+            status->status = STATUS_CURL_ERROR;
+            status->curl_code = code;
+            fill_response_meta(curl, &status->resp);
+            status->msg = (status->curl_error[0] != '\0') ? status->curl_error : curl_easy_strerror(code);
+        }
+    }
+    else {
+        if (status != NULL) {
+            fill_response_meta(curl, &status->resp);
+            status->curl_code = code;
+
+            if (status->resp.http_code >= 200 && status->resp.http_code < 300 && data.chunk != NULL && data.size > 0) {
+                status->status = STATUS_OK;
+                status->msg = "请求成功";
+            } else {
+                status->status = STATUS_HTTP_ERROR;
+                status->msg = "HTTP状态异常或响应体为空";
+            }
+        }
+    }
+    return data;
+}
+
+Data getUserInfo(Status* status, char* username) {
+    Data data = {0};
+    init_status(status);
+
+    if (username == NULL || username[0] == '\0') {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_OK;
+            status->msg = "用户名为空";
+        }
+        return data;
+    }
+
+    CURL *curl = getCurl();
+    if(curl==NULL) {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_FAILED_INIT;
+            status->msg = "curl句柄初始化失败";
+        }
+        return data;
+    }
+
+    CURLcode code;
+    char completed_url[200];
+    int written = snprintf(completed_url, sizeof(completed_url), "%s/user.info?handles=%s", BASE_URL, username);
+    if (written < 0 || written >= (int)sizeof(completed_url)) {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_OK;
+            status->msg = "请求URL过长";
+        }
+        return data;
+    }
+
+    log_message(INFO,"正在执行getUserInfo...");
+    curl_easy_reset(curl);
+    set_custom_options(curl);
+    curl_easy_setopt(curl, CURLOPT_URL, completed_url); // https://codeforces.com/api/user.info?handles={username}
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,(void*)&data);
+    if (status != NULL) {
+        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, status->curl_error);
+    }
+
+    code = curl_easy_perform(curl);
+
+    if(code != CURLE_OK) {
+        if (status != NULL) {
+            status->status = STATUS_CURL_ERROR;
+            status->curl_code = code;
+            fill_response_meta(curl, &status->resp);
+            status->msg = (status->curl_error[0] != '\0') ? status->curl_error : curl_easy_strerror(code);
+        }
+    }
+    else {
+        if (status != NULL) {
+            fill_response_meta(curl, &status->resp);
+            status->curl_code = code;
+
+            if (status->resp.http_code >= 200 && status->resp.http_code < 300 && data.chunk != NULL && data.size > 0) {
+                status->status = STATUS_OK;
+                status->msg = "请求成功";
+            } else {
+                status->status = STATUS_HTTP_ERROR;
+                status->msg = "HTTP状态异常或响应体为空";
+            }
+        }
+    }
+    return data;
+}
+
+Data getUserInfo(Status* status,char* username){
+    Data data = {0};
+    init_status(status);
+
+    if (username == NULL || username[0] == '\0') {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_OK;
+            status->msg = "用户名为空";
+        }
+        return data;
+    }
+
+    CURL *curl = getCurl();
+    if(curl==NULL) {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_FAILED_INIT;
+            status->msg = "curl句柄初始化失败";
+        }
+        return data;
+    }
+
+    CURLcode code;
+    char completed_url[200];
+    int written = snprintf(completed_url, sizeof(completed_url), "%s/user.info?handle=%s", BASE_URL, username);
+    if (written < 0 || written >= (int)sizeof(completed_url)) {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_OK;
+            status->msg = "请求URL过长";
+        }
+        return data;
+    }
+
+    log_message(INFO,"正在执行getUserInfo...");
+    curl_easy_reset(curl);
+    set_custom_options(curl);
+    curl_easy_setopt(curl, CURLOPT_URL, completed_url); // https://codeforces.com/api/user.info?handle={username}
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,(void*)&data);
+    if (status != NULL) {
+        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, status->curl_error);
+    }
+
+    code = curl_easy_perform(curl);
+
+    if(code != CURLE_OK) {
+        if (status != NULL) {
+            status->status = STATUS_CURL_ERROR;
+            status->curl_code = code;
+            fill_response_meta(curl, &status->resp);
+            status->msg = (status->curl_error[0] != '\0') ? status->curl_error : curl_easy_strerror(code);
+        }
+    }
+    else {
+        if (status != NULL) {
+            fill_response_meta(curl, &status->resp);
+            status->curl_code = code;
+
+            if (status->resp.http_code >= 200 && status->resp.http_code < 300 && data.chunk != NULL && data.size > 0) {
+                status->status = STATUS_OK;
+                status->msg = "请求成功";
+            } else {
+                status->status = STATUS_HTTP_ERROR;
+                status->msg = "HTTP状态异常或响应体为空";
+            }
+        }
+    }
+    return data;
+}
+
+Data getUserRating(Status* status,char* username){
+    Data data = {0};
+    init_status(status);
+
+    if (username == NULL || username[0] == '\0') {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_OK;
+            status->msg = "用户名为空";
+        }
+        return data;
+    }
+
+    CURL *curl = getCurl();
+    if(curl==NULL) {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_FAILED_INIT;
+            status->msg = "curl句柄初始化失败";
+        }
+        return data;
+    }
+
+    CURLcode code;
+    char completed_url[200];
+    int written = snprintf(completed_url, sizeof(completed_url), "%s/user.rating?handle=%s", BASE_URL, username);
+    if (written < 0 || written >= (int)sizeof(completed_url)) {
+        if (status != NULL) {
+            status->status = STATUS_INTERNAL_ERROR;
+            status->curl_code = CURLE_OK;
+            status->msg = "请求URL过长";
+        }
+        return data;
+    }
+
+    log_message(INFO,"正在执行getUserRating...");
+    curl_easy_reset(curl);
+    set_custom_options(curl);
+    curl_easy_setopt(curl, CURLOPT_URL, completed_url); // https://codeforces.com/api/user.rating?handle={username}
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,(void*)&data);
+    if (status != NULL) {
+        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, status->curl_error);
+    }
+
+    code = curl_easy_perform(curl);
+
+    if(code != CURLE_OK) {
+        if (status != NULL) {
+            status->status = STATUS_CURL_ERROR;
+            status->curl_code = code;
+            fill_response_meta(curl, &status->resp);
+            status->msg = (status->curl_error[0] != '\0') ? status->curl_error : curl_easy_strerror(code);
+        }
+    }
+    else {
+        if (status != NULL) {
+            fill_response_meta(curl, &status->resp);
+            status->curl_code = code;
+
+            if (status->resp.http_code >= 200 && status->resp.http_code < 300 && data.chunk != NULL && data.size > 0) {
+                status->status = STATUS_OK;
+                status->msg = "请求成功";
+            } else {
+                status->status = STATUS_HTTP_ERROR;
+                status->msg = "HTTP状态异常或响应体为空";
+            }
+        }
+    }
+    return data;
+}

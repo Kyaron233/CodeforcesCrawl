@@ -33,5 +33,8 @@ typedef struct {
 
 typedef enum {
     ContestListData = 0,
-    UserRatingData = 1 
+    UserRatingData,
+    UserStatusData,
+    UserInfoData,
+    QueneCount
 } quene;

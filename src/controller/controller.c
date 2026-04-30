@@ -3,7 +3,7 @@
 #include <curl/curl.h>
 #include "utils/logger.h"
 #include "crawler/crawler.h"
-#define CURL_QUENE 10  // 这里是我们需要使用curl请求数据的次数
+#define CURL_QUENE QueneCount  // 这里是我们需要使用curl请求数据的次数
 // 一个任务一个函数，一个函数一个status
 
 // 这里用static有问题吗
@@ -12,13 +12,18 @@ static Status corestatus[CURL_QUENE];
 
 
 static const char* get_task_name(quene task_order) {
-    if (task_order == ContestListData) {
-        return "获取全部比赛列表";
+    switch (task_order) {
+        case ContestListData:
+            return "获取全部比赛列表";
+        case UserRatingData:
+            return "获取用户参赛列表";
+        case UserStatusData:
+            return "获取用户提交列表";
+        case UserInfoData:
+            return "获取用户基本信息";
+        default:
+            return "未知任务";
     }
-    if (task_order == UserRatingData) {
-        return "获取用户参赛列表";
-    }
-    return "未知任务";
 }
 
 void check(quene task_order){
@@ -54,6 +59,11 @@ void startApp(char* username){
    coredata[UserRatingData] = getUserAttendedContestList(&corestatus[UserRatingData],username);
    check(UserRatingData);
 
+   coredata[UserStatusData] = getUserStatus(&corestatus[UserStatusData],username);
+   check(UserStatusData); 
+
+    coredata[UserInfoData] = getUserInfo(&corestatus[UserInfoData],username);
+    check(UserInfoData); 
    
 }
 
