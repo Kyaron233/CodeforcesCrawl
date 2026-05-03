@@ -31,22 +31,48 @@ static void fill_response_meta(CURL* curl, Response* resp) {
     curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &resp->size_download);
 }
 
+static void shrink_data(Data* data) {
+    if (data == NULL || data->chunk == NULL) {
+        return;
+    }
+
+    size_t exact = data->size + 1;
+    if (data->cap == exact) {
+        return;
+    }
+
+    char* new_chunk = realloc(data->chunk, exact);
+    if (new_chunk != NULL) {
+        data->chunk = new_chunk;
+        data->cap = exact;
+    }
+}
+
 size_t write_callback(char* data,size_t size,size_t nmemb,void* userp){
     size_t realsize = size * nmemb;
-    Data *chunk = (Data*)userp;
+    Data *userdata = (Data*)userp;
 
     char msg[1000] = "write_callback working";
 
-    char* new_chunk_ptr = realloc(chunk->chunk,chunk->size+realsize+1);
-    if(new_chunk_ptr==NULL){
-        sprintf(msg,"[write_callback]:爬取数据时分配内存失败！");
-        log_message(ERROR,msg);
-        return 0;
+    size_t required = userdata->size + realsize + 1; // +1 for explicit '\0'
+    if (required > userdata->cap) {
+        size_t new_cap = userdata->cap + realsize + 16;
+        if (new_cap < required) {
+            new_cap = required;
+        }
+
+        char* new_userdata_ptr = realloc(userdata->chunk, new_cap);
+        if(new_userdata_ptr==NULL){
+            sprintf(msg,"[write_callback]:爬取数据时分配内存失败！");
+            log_message(ERROR,msg);
+            return 0;
+        }
+        userdata->chunk = new_userdata_ptr;
+        userdata->cap = new_cap;
     }
-    chunk->chunk = new_chunk_ptr;
-    memcpy(&(chunk->chunk[chunk->size]),data,realsize);
-    chunk->size = chunk->size + realsize;
-    chunk->chunk[chunk->size] = 0;
+    memcpy(&(userdata->chunk[userdata->size]),data,realsize);
+    userdata->size = userdata->size + realsize;
+    userdata->chunk[userdata->size] = 0;
 
     return realsize;
 }
@@ -125,6 +151,7 @@ Data getContestList(Status* status) {
             }
         }
     }
+    shrink_data(&data);
     return data;
 }
 
@@ -201,6 +228,7 @@ Data getUserAttendedContestList(Status* status,char* username){
             }
         }
     }
+    shrink_data(&data);
     return data;
 }
 
@@ -273,6 +301,7 @@ Data getUserStatus(Status* status,char* username){
             }
         }
     }
+    shrink_data(&data);
     return data;
 }
 
@@ -345,6 +374,7 @@ Data getUserInfo(Status* status, char* username) {
             }
         }
     }
+    shrink_data(&data);
     return data;
 }
 
@@ -417,6 +447,7 @@ Data getUserInfo(Status* status,char* username){
             }
         }
     }
+    shrink_data(&data);
     return data;
 }
 
@@ -489,5 +520,6 @@ Data getUserRating(Status* status,char* username){
             }
         }
     }
+    shrink_data(&data);
     return data;
 }

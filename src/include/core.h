@@ -5,6 +5,7 @@
 typedef struct {
     char* chunk;
     size_t size;
+    size_t cap;
 } Data;
 
 
