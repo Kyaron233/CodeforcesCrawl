@@ -1,5 +1,5 @@
 #pragma once
-
+#define ll long long
 #include <curl/curl.h>
 
 typedef struct {
@@ -38,3 +38,36 @@ typedef enum {
     UserInfoData,
     QueneCount
 } quene;
+
+
+typedef struct {
+    ll contestId;
+    char* contestName;
+    char* handle;
+    int rank;
+    long ratingUpdateTimeSeconds;
+    long oldRating;
+    long newRating;
+} UserRating;
+
+typedef struct {
+    int contestId;
+    char* index;
+    char* name;
+    char* type;
+    int points;
+    int rating;
+} Problem;
+
+typedef struct {
+    int id;
+    int contestId;
+    long creationTimeSeconds;
+    long relativeTimeSeconds;
+    Problem problem;
+    char* programmingLanguage;
+    char* verdict;
+    int passedTestCount;
+    long timeConsumedMillis;
+    long memoryConsumedBytes;
+} Submission;
