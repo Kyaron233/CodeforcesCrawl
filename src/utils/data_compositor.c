@@ -1,31 +1,52 @@
 //用cJSON处理数据
 #include "cJSON.h"
-#include "core.h"
 #include <stdlib.h>
+#include <time.h>
+#include "core.h"
+#include "utils/json_utils.h"
+#include "utils/output.h"
 
-void deleteAuthor(cJSON* root){
-    int size = cJSON_GetArraySize(root);
-    for(int i =0;i<size;i++){
-        cJSON* item = cJSON_GetArrayItem(root,i);
-        cJSON_DeleteItemFromObject(item, "author");
-    }
-}
+time_t now = 0;  // 当前时间戳（秒），使用标准库 time() 函数赋值
 
-cJSON* parse_data_tree(cJSON** raw_objs) {
-    int data_amount; // TODO:现在好像还不是很清楚amount的大小
-    cJSON** parsed_data = malloc(sizeof(cJSON*)*data_amount);
+
+// 干脆就在这个函数处理得了，顶多返回个status啥的
+void parse_data(cJSON** parsed_data) {
+
+    now = time(NULL);
 
     //2.抓取比赛列表
     cJSON* ContestList = cJSON_GetObjectItemCaseSensitive(parsed_data[ContestListData],"result");
+    
     //2.(..)和用户参加的比赛的列表。 3.抓取用户参加比赛的排名，获得分数,各题目的分数
     cJSON* UserAttendResult = cJSON_GetObjectItemCaseSensitive(parsed_data[UserRatingData],"result");
-    //我直接用这个user.rating的数据，然后在列表里面的每一个比赛中append比赛的详情
-    //在这之前，先把user.status爬一下
+    int UserAttendCount = cJSON_IsArray(UserAttendResult) ? cJSON_GetArraySize(UserAttendResult) : 0; //用户参加的比赛的计数
+
+    RatingChange* rating_changes = NULL;
+
+    if (UserAttendCount > 0) {
+        rating_changes = (RatingChange*)calloc((size_t)UserAttendCount, sizeof(RatingChange));
+        if (rating_changes != NULL) {
+            for (int i = 0; i < UserAttendCount; ++i) {
+                cJSON* item = cJSON_GetArrayItem(UserAttendResult, i);
+                if (!cJSON_IsObject(item)) {
+                    continue;
+                }
+                json_try_get_int(item, "contestId", &rating_changes[i].contestId);
+                rating_changes[i].contestName = json_dup_string(item, "contestName");
+                json_try_get_int(item, "rank", &rating_changes[i].rank);
+                json_try_get_long(item, "ratingUpdateTimeSeconds", &rating_changes[i].ratingUpdateTimeSeconds);
+                json_try_get_long(item, "oldRating", &rating_changes[i].oldRating);
+                json_try_get_long(item, "newRating", &rating_changes[i].newRating);
+            }
+        }
+    }
+
+    
     cJSON* UserStatusResult = cJSON_GetObjectItemCaseSensitive(parsed_data[UserStatusData],"result");
-    deleteAuthor(UserAttendResult);
+    
 
-    /*感觉这一部分好难啊，，，数据解析还要自己搓的*/
+    //先把简单部分做了 主页
+    cJSON* UserInfoResult = cJSON_GetObjectItemCaseSensitive(parsed_data[UserInfoData],"result");
 
 
-    //我感觉可以先根据前面的那个UC点Ranking，然后你在user Renton里面读取出来的那个数据去从里面找到看test ID，然后再根据这个contest ID去那个state里面一个一个找
 }
