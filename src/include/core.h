@@ -41,14 +41,13 @@ typedef enum {
 
 
 typedef struct {
-    ll contestId;
+    int contestId;
     char* contestName;
-    char* handle;
     int rank;
     long ratingUpdateTimeSeconds;
     long oldRating;
     long newRating;
-} UserRating;
+} RatingChange; // userRating就是这个
 
 typedef struct {
     int contestId;
@@ -60,6 +59,7 @@ typedef struct {
 } Problem;
 
 typedef struct {
+    int onTime; // 等于0就是补交的 这个不属于原来的字段
     int id;
     int contestId;
     long creationTimeSeconds;
@@ -71,3 +71,30 @@ typedef struct {
     long timeConsumedMillis;
     long memoryConsumedBytes;
 } Submission;
+
+typedef struct SubmissionNode {
+    Submission submission;
+    struct SubmissionNode* prev;
+    struct SubmissionNode* next;
+} SubmissionNode;
+
+typedef struct {
+    SubmissionNode* head;
+    int size;
+} SubmissionList;
+
+typedef struct {
+    int id;
+    char* name;
+    char* type;
+    char* phase;
+    int frozen;
+    long durationSeconds;
+    long startTimeSeconds;
+    long relativeTimeSeconds;
+} Contest;
+
+typedef struct{
+    RatingChange userRating;
+    SubmissionList submissions;
+} ContestRecord;
