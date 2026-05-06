@@ -111,27 +111,36 @@ void parse_and_output(Data* coredata, char* username) {
             cJSON* item = cJSON_GetArrayItem(UserStatusResult, i);
             cJSON* problem = NULL;
             Submission* submission = &submissionList[i];
+            int submission_contest_id = 0;
+            int problem_contest_id = 0;
 
             if (!cJSON_IsObject(item)) {
                 continue;
             }
 
             //TODO ： 把以下内容封装到函数里面
+            // Resolve contest id: prefer submission.contestId, fallback to problem.contestId.
             json_try_get_int(item, "id", &submission->id);
-            json_try_get_int(item, "contestId", &submission->contestId);
+            json_try_get_int(item, "contestId", &submission_contest_id);
             json_try_get_long(item, "creationTimeSeconds", &submission->creationTimeSeconds);
             json_try_get_long(item, "relativeTimeSeconds", &submission->relativeTimeSeconds);
             submission->participateType = participate_method(item);
 
             problem = cJSON_GetObjectItemCaseSensitive(item, "problem");
             if (cJSON_IsObject(problem)) {
-                json_try_get_int(problem, "contestId", &submission->problem.contestId);
+                json_try_get_int(problem, "contestId", &problem_contest_id);
+                submission->problem.contestId = problem_contest_id;
                 json_try_get_string(problem, "index", &submission->problem.index);
                 json_try_get_string(problem, "name", &submission->problem.name);
                 json_try_get_string(problem, "type", &submission->problem.type);
                 json_try_get_double(problem, "points", &submission->problem.points);
                 json_try_get_int(problem, "rating", &submission->problem.rating);
             }
+
+            if (submission_contest_id <= 0) {
+                submission_contest_id = problem_contest_id;
+            }
+            submission->contestId = submission_contest_id;
 
             json_try_get_string(item, "programmingLanguage", &submission->programmingLanguage);
             json_try_get_string(item, "verdict", &submission->verdict);
@@ -163,9 +172,13 @@ void parse_and_output(Data* coredata, char* username) {
 
                 // 在这之前已经对submission根据contestId进行排序了 ContestRecord不记录不在比赛的提交
                 for (int idx = nextSubmissionSearchIndex; idx < submissionCount; ++idx) {
-                    if (submissionList[idx].problem.contestId > rating_changes[i].contestId) 
+                    // Skip submissions without a contest id after resolution.
+                    if (submissionList[idx].contestId <= 0) {
+                        continue;
+                    }
+                    if (submissionList[idx].contestId > rating_changes[i].contestId) 
                         break;
-                    if (submissionList[idx].problem.contestId != rating_changes[i].contestId) {
+                    if (submissionList[idx].contestId != rating_changes[i].contestId) {
                         nextSubmissionSearchIndex = idx;
                         continue;
                     }
@@ -218,10 +231,11 @@ static int compare_submission_by_contest_id(const void* lhs, const void* rhs) {
     const Submission* a = (const Submission*)lhs;
     const Submission* b = (const Submission*)rhs;
 
-    if (a->problem.contestId < b->problem.contestId) {
+    // Sort by resolved contest id to match contest records consistently.
+    if (a->contestId < b->contestId) {
         return -1;
     }
-    if (a->problem.contestId > b->problem.contestId) {
+    if (a->contestId > b->contestId) {
         return 1;
     }
     return 0;
