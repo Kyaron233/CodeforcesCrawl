@@ -53,3 +53,31 @@ int output_json_with_username(const cJSON* root, const char* username, const cha
 
     return output_json(root, complete_filename);
 }
+
+int output_rawstring_with_username(const char* raw, const char* username, const char* filename) {
+    char complete_filename[512];
+    int written = 0;
+    FILE* out = NULL;
+    int ok = 0;
+
+    if (raw == NULL || username == NULL || username[0] == '\0' || filename == NULL || filename[0] == '\0') {
+        return 0;
+    }
+
+    written = snprintf(complete_filename, sizeof(complete_filename), "%s%s_%s", OUTPUT_DIR, username, filename);
+    if (written < 0 || (size_t)written >= sizeof(complete_filename)) {
+        return 0;
+    }
+
+    out = fopen(complete_filename, "w");
+    if (out == NULL) {
+        return 0;
+    }
+
+    if (fputs(raw, out) != EOF) {
+        ok = 1;
+    }
+
+    fclose(out);
+    return ok;
+}

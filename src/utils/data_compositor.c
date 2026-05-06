@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time.h>
 #include "core.h"
+#include "utils/data_compositor.h"
 #include "utils/json_utils.h"
 #include "utils/output.h"
 
@@ -23,15 +24,30 @@ static int participate_method(cJSON* item);
 
 
 // 干脆就在这个函数处理得了，顶多返回个status啥的
-void parse_and_output(cJSON** parsed_data,char* username) {
+void parse_and_output(Data* coredata, char* username) {
+    cJSON* parsed_data[QueneCount] = {0};
+
+    if (coredata == NULL || username == NULL) {
+        return;
+    }
+
+    for (int i = 0; i < QueneCount; ++i) {
+        if (coredata[i].chunk == NULL || coredata[i].chunk[0] == '\0') {
+            parsed_data[i] = NULL;
+            continue;
+        }
+        parsed_data[i] = cJSON_Parse(coredata[i].chunk);
+    }
 
     
 
     //2.抓取比赛列表
+    // 下面的contestlist已经直接打印了（在controller里面，直接打印原始字符串）
     cJSON* ContestList = cJSON_GetObjectItemCaseSensitive(parsed_data[ContestListData],"result");
 
-    if (ContestList != NULL) 
-        output_json_with_username(ContestList, username, "contestList.json");
+    // if (ContestList != NULL) 
+    //     output_json_with_username(ContestList, username, "contestList.json"); 
+        
 
     //2.(..)和用户参加的比赛的列表。 3.抓取用户参加比赛的排名，获得分数,各题目的分数
     cJSON* UserAttendResult = cJSON_GetObjectItemCaseSensitive(parsed_data[UserRatingData],"result");
@@ -85,7 +101,7 @@ void parse_and_output(cJSON** parsed_data,char* username) {
     
     cJSON* UserStatusResult = cJSON_GetObjectItemCaseSensitive(parsed_data[UserStatusData],"result");
     int submissionCount = cJSON_IsArray(UserStatusResult) ? cJSON_GetArraySize(UserStatusResult):-1;
-    
+
     //把所有的Submission映射到我们的list中
     Submission *submissionList = NULL;
     if(submissionCount>0){
@@ -100,7 +116,7 @@ void parse_and_output(cJSON** parsed_data,char* username) {
                 continue;
             }
 
-            
+            //TODO ： 把以下内容封装到函数里面
             json_try_get_int(item, "id", &submission->id);
             json_try_get_int(item, "contestId", &submission->contestId);
             json_try_get_long(item, "creationTimeSeconds", &submission->creationTimeSeconds);
@@ -123,15 +139,19 @@ void parse_and_output(cJSON** parsed_data,char* username) {
             json_try_get_long(item, "timeConsumedMillis", &submission->timeConsumedMillis);
             json_try_get_long(item, "memoryConsumedBytes", &submission->memoryConsumedBytes);
         }
-
+        //TODO ： 把以上内容封装到函数
         if (submissionCount > 1) {
             qsort(submissionList, (size_t)submissionCount, sizeof(Submission), compare_submission_by_contest_id);
         }
     }
 
     ContestRecord* contestRecords = NULL;
+    int *LateSubmissionsIndex = NULL; 
     if (UserAttendCount > 0) {
         contestRecords = (ContestRecord*)calloc((size_t)UserAttendCount, sizeof(ContestRecord));
+        LateSubmissionsIndex = (int*)calloc((size_t)UserAttendCount,sizeof(int));
+        long LateSubmissionsConut = 0;
+        int nextSubmissionSearchIndex = 0;
         if (contestRecords != NULL) {
             for (int i = 0; i < UserAttendCount; ++i) {
                 contestRecords[i].userRating = rating_changes[i];
@@ -142,17 +162,41 @@ void parse_and_output(cJSON** parsed_data,char* username) {
                 }
 
                 // 在这之前已经对submission根据contestId进行排序了 ContestRecord不记录不在比赛的提交
-                for (int idx = 0; idx < submissionCount; ++idx) {
+                for (int idx = nextSubmissionSearchIndex; idx < submissionCount; ++idx) {
                     if (submissionList[idx].problem.contestId > rating_changes[i].contestId) 
                         break;
-                    if (submissionList[idx].problem.contestId != rating_changes[i].contestId) 
+                    if (submissionList[idx].problem.contestId != rating_changes[i].contestId) {
+                        nextSubmissionSearchIndex = idx;
                         continue;
+                    }
                     if (submissionList[idx].participateType != CONTESTANT) continue; // 注意这里舍弃了不是参赛者身份的提交
+                    //下面判断是不是迟交 relativeTimeSeconds是从比赛开始到该代码提交经过的秒数
+                    if (submissionList[idx].relativeTimeSeconds > contestRecords[i].userRating.durationSeconds){
+                        submissionList[idx].onTime = 0;
+                        LateSubmissionsIndex[LateSubmissionsConut++] = idx;
+                    }
                     submission_list_push_back(&contestRecords[i].submissions, &submissionList[idx]);
                 }
             }
-
-            output_contest_records_json(contestRecords, UserAttendCount, username);
+            output_contest_records_json(contestRecords, UserAttendCount, username); // 这里是因为我用的是自己modify的结构体
+        }
+        // 输出所有迟交的提交记录
+        if (LateSubmissionsIndex != NULL && submissionList != NULL && submissionCount > 0) {
+            cJSON* late_submissions = cJSON_CreateArray();
+            if (late_submissions != NULL) {
+                for (long i = 0; i < LateSubmissionsConut; ++i) {
+                    int idx = LateSubmissionsIndex[i];
+                    if (idx < 0 || idx >= submissionCount) {
+                        continue;
+                    }
+                    cJSON* item = build_submission_json(&submissionList[idx]);
+                    if (item != NULL) {
+                        cJSON_AddItemToArray(late_submissions, item);
+                    }
+                }
+                output_json_with_username(late_submissions, username, "lateSubmissions.json");
+                cJSON_Delete(late_submissions);
+            }
         }
     }
     
@@ -161,6 +205,12 @@ void parse_and_output(cJSON** parsed_data,char* username) {
     //先把简单部分做了 主页
     cJSON* UserInfoResult = cJSON_GetObjectItemCaseSensitive(parsed_data[UserInfoData],"result");
     output_json_with_username(UserInfoResult,username,"userInfo.json");
+
+    for (int i = 0; i < QueneCount; ++i) {
+        if (parsed_data[i] != NULL) {
+            cJSON_Delete(parsed_data[i]);
+        }
+    }
 }
 
 static int compare_submission_by_contest_id(const void* lhs, const void* rhs) {
@@ -334,7 +384,7 @@ static cJSON* build_contest_record_json(const ContestRecord* record) {
     return obj;
 }
 
-static void output_contest_records_json(const ContestRecord* records, int count, const char* username) {
+static void output_contest_records_json(const ContestRecord* records, int count, const char* username ){
     // 生成ContestRecord列表并输出为JSON文件
     cJSON* root = NULL;
 
@@ -357,13 +407,10 @@ static void output_contest_records_json(const ContestRecord* records, int count,
     }
 
     // 输出并清理
-    output_json_with_username(root, username, "contestRecords.json");
+    output_json_with_username(root, username,"ContestRecord.json");
     cJSON_Delete(root);
 }
-static int check_ontime(){
-    time_t now = time(NULL);
-    if()
-}
+
 static int participate_method(cJSON* item){
     cJSON* author = NULL;
     cJSON* participantType = NULL;

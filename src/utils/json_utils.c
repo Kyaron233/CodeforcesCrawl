@@ -35,6 +35,22 @@ int json_try_get_long(const cJSON* obj, const char* key, long* out) {
     return 1;
 }
 
+int json_try_get_double(const cJSON* obj, const char* key, double* out) {
+    const cJSON* item = NULL;
+
+    if (obj == NULL || key == NULL || out == NULL) {
+        return 0;
+    }
+
+    item = cJSON_GetObjectItemCaseSensitive(obj, key);
+    if (!cJSON_IsNumber(item)) {
+        return 0;
+    }
+
+    *out = cJSON_GetNumberValue(item);
+    return 1;
+}
+
 int json_try_get_string(const cJSON* obj, const char* key, char** out) {
     const cJSON* item = NULL;
     size_t len;
