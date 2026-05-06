@@ -148,11 +148,11 @@ void parse_and_output(Data* coredata, char* username) {
     ContestRecord* contestRecords = NULL;
     int *LateSubmissionsIndex = NULL; 
     if (UserAttendCount > 0) {
-        contestRecords = (ContestRecord*)calloc((size_t)UserAttendCount, sizeof(ContestRecord));
+        contestRecords = (ContestRecord*)calloc((size_t)submissionCount, sizeof(ContestRecord));
         LateSubmissionsIndex = (int*)calloc((size_t)UserAttendCount,sizeof(int));
         long LateSubmissionsConut = 0;
         int nextSubmissionSearchIndex = 0;
-        if (contestRecords != NULL) {
+        if (contestRecords != NULL && LateSubmissionsIndex != NULL) {
             for (int i = 0; i < UserAttendCount; ++i) {
                 contestRecords[i].userRating = rating_changes[i];
                 submission_list_init(&contestRecords[i].submissions);
@@ -175,6 +175,7 @@ void parse_and_output(Data* coredata, char* username) {
                         submissionList[idx].onTime = 0;
                         LateSubmissionsIndex[LateSubmissionsConut++] = idx;
                     }
+                    else submissionList[idx].onTime=1;
                     submission_list_push_back(&contestRecords[i].submissions, &submissionList[idx]);
                 }
             }
