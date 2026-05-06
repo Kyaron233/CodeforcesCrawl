@@ -1,6 +1,7 @@
 //用cJSON处理数据
 #include "cJSON.h"
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "core.h"
 #include "utils/json_utils.h"
@@ -17,7 +18,8 @@ static cJSON* build_submission_json(const Submission* submission);
 static void append_submission_list_json(cJSON* array, const SubmissionList* list);
 static cJSON* build_contest_record_json(const ContestRecord* record);
 static void output_contest_records_json(const ContestRecord* records, int count, const char* username);
-static int check_ontime(long updateTime,long deadline);
+// static int check_ontime(long updateTime,long deadline); // 从时间上检查是否超时
+static int participate_method(cJSON* item);
 
 
 // 干脆就在这个函数处理得了，顶多返回个status啥的
@@ -51,6 +53,31 @@ void parse_and_output(cJSON** parsed_data,char* username) {
                 json_try_get_long(item, "ratingUpdateTimeSeconds", &rating_changes[i].ratingUpdateTimeSeconds);
                 json_try_get_long(item, "oldRating", &rating_changes[i].oldRating);
                 json_try_get_long(item, "newRating", &rating_changes[i].newRating);
+                //时间 要从contestlist里面获取 找到
+                //这样太慢了 到时候优化一下
+                if (cJSON_IsArray(ContestList)) {
+                    int contestCount = cJSON_GetArraySize(ContestList);
+                    for (int j = 0; j < contestCount; ++j) {
+                        cJSON* contest = cJSON_GetArrayItem(ContestList, j);
+                        int contestId = 0;
+
+                        if (!cJSON_IsObject(contest)) {
+                            continue;
+                        }
+
+                        if (!json_try_get_int(contest, "id", &contestId)) {
+                            continue;
+                        }
+
+                        if (contestId != rating_changes[i].contestId) {
+                            continue;
+                        }
+
+                        json_try_get_long(contest, "startTimeSeconds", &rating_changes[i].startTimeSeconds);
+                        json_try_get_long(contest, "durationSeconds", &rating_changes[i].durationSeconds);
+                        break;
+                    }
+                }
             }
         }
     }
@@ -58,10 +85,13 @@ void parse_and_output(cJSON** parsed_data,char* username) {
     
     cJSON* UserStatusResult = cJSON_GetObjectItemCaseSensitive(parsed_data[UserStatusData],"result");
     int submissionCount = cJSON_IsArray(UserStatusResult) ? cJSON_GetArraySize(UserStatusResult):-1;
+    
+    //把所有的Submission映射到我们的list中
     Submission *submissionList = NULL;
     if(submissionCount>0){
         submissionList = (Submission*)calloc((size_t)submissionCount,sizeof(Submission));
         for(int i =0;i<submissionCount;i++){
+            
             cJSON* item = cJSON_GetArrayItem(UserStatusResult, i);
             cJSON* problem = NULL;
             Submission* submission = &submissionList[i];
@@ -70,11 +100,12 @@ void parse_and_output(cJSON** parsed_data,char* username) {
                 continue;
             }
 
-            submission->onTime = check_ontime();
+            
             json_try_get_int(item, "id", &submission->id);
             json_try_get_int(item, "contestId", &submission->contestId);
             json_try_get_long(item, "creationTimeSeconds", &submission->creationTimeSeconds);
             json_try_get_long(item, "relativeTimeSeconds", &submission->relativeTimeSeconds);
+            submission->participateType = participate_method(item);
 
             problem = cJSON_GetObjectItemCaseSensitive(item, "problem");
             if (cJSON_IsObject(problem)) {
@@ -82,7 +113,7 @@ void parse_and_output(cJSON** parsed_data,char* username) {
                 json_try_get_string(problem, "index", &submission->problem.index);
                 json_try_get_string(problem, "name", &submission->problem.name);
                 json_try_get_string(problem, "type", &submission->problem.type);
-                json_try_get_int(problem, "points", &submission->problem.points);
+                json_try_get_double(problem, "points", &submission->problem.points);
                 json_try_get_int(problem, "rating", &submission->problem.rating);
             }
 
@@ -110,12 +141,13 @@ void parse_and_output(cJSON** parsed_data,char* username) {
                     continue;
                 }
 
+                // 在这之前已经对submission根据contestId进行排序了 ContestRecord不记录不在比赛的提交
                 for (int idx = 0; idx < submissionCount; ++idx) {
                     if (submissionList[idx].problem.contestId > rating_changes[i].contestId) 
                         break;
                     if (submissionList[idx].problem.contestId != rating_changes[i].contestId) 
                         continue;
-
+                    if (submissionList[idx].participateType != CONTESTANT) continue; // 注意这里舍弃了不是参赛者身份的提交
                     submission_list_push_back(&contestRecords[i].submissions, &submissionList[idx]);
                 }
             }
@@ -331,4 +363,42 @@ static void output_contest_records_json(const ContestRecord* records, int count,
 static int check_ontime(){
     time_t now = time(NULL);
     if()
+}
+static int participate_method(cJSON* item){
+    cJSON* author = NULL;
+    cJSON* participantType = NULL;
+    const char* value = NULL;
+
+    if (!cJSON_IsObject(item)) {
+        return CONTESTANT;
+    }
+
+    author = cJSON_GetObjectItemCaseSensitive(item, "author");
+    if (!cJSON_IsObject(author)) {
+        return CONTESTANT;
+    }
+
+    participantType = cJSON_GetObjectItemCaseSensitive(author, "participantType");
+    if (!cJSON_IsString(participantType) || participantType->valuestring == NULL) {
+        return CONTESTANT;
+    }
+
+    value = participantType->valuestring;
+    if (strcmp(value, "CONTESTANT") == 0) {
+        return CONTESTANT;
+    }
+    if (strcmp(value, "PRACTICE") == 0) {
+        return PRACTICE;
+    }
+    if (strcmp(value, "VIRTUAL") == 0) {
+        return VIRTUAL;
+    }
+    if (strcmp(value, "MANAGER") == 0) {
+        return MANAGER;
+    }
+    if (strcmp(value, "OUT_OF_COMPETITION") == 0) {
+        return OUT_OF_COMPETITION;
+    }
+
+    return UNKNOWN;
 }
