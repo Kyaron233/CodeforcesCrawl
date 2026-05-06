@@ -8,9 +8,10 @@
 // 一个任务一个函数，一个函数一个status
 
 // 这里用static有问题吗
+// 没有问题，static会让这里的数据的生命周期跟整个文件一致，并不是不让改
 static Data coredata[QUENE_LEN];
 static Status corestatus[QUENE_LEN];
-static cJSON* parsed_json[PARSED_LEN];
+
 
 static const char* get_task_name(quene task_order) {
     switch (task_order) {
@@ -75,7 +76,7 @@ void startApp(char* username){
    log_message(INFO,"开始执行任务...");
    
    crawl_data(username);
-   parse_data(coredata);
-   compose_webpage(parsed_json);
+   parse_and_output(coredata,username);
+   
 }
 

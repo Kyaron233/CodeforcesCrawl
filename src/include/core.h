@@ -39,6 +39,14 @@ typedef enum {
     QueneCount
 } quene;
 
+typedef enum {
+    CONTESTANT = 0,
+    PRACTICE,
+    VIRTUAL,
+    MANAGER,
+    OUT_OF_COMPETITION,
+    UNKNOWN
+} ParticipateType;
 
 typedef struct {
     int contestId;
@@ -47,6 +55,8 @@ typedef struct {
     long ratingUpdateTimeSeconds;
     long oldRating;
     long newRating;
+    long startTimeSeconds;
+    long durationSeconds;
 } RatingChange; // userRating就是这个
 
 typedef struct {
@@ -54,7 +64,7 @@ typedef struct {
     char* index;
     char* name;
     char* type;
-    int points;
+    double points;
     int rating;
 } Problem;
 
@@ -70,6 +80,8 @@ typedef struct {
     int passedTestCount;
     long timeConsumedMillis;
     long memoryConsumedBytes;
+    double points; // API可能为空，未提供时保持默认值
+    int participateType;// 参赛类型的一个枚举
 } Submission;
 
 typedef struct SubmissionNode {
