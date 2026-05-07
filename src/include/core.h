@@ -1,5 +1,5 @@
 #pragma once
-
+#define ll long long
 #include <curl/curl.h>
 
 typedef struct {
@@ -39,3 +39,75 @@ typedef enum {
     UserInfoData,
     QueneCount
 } quene;
+
+typedef enum {
+    CONTESTANT = 0,
+    PRACTICE,
+    VIRTUAL,
+    MANAGER,
+    OUT_OF_COMPETITION,
+    UNKNOWN
+} ParticipateType;
+
+typedef struct {
+    int contestId;
+    char* contestName;
+    int rank;
+    long ratingUpdateTimeSeconds;
+    long oldRating;
+    long newRating;
+    long startTimeSeconds;
+    long durationSeconds;
+} RatingChange; // userRating就是这个
+
+typedef struct {
+    int contestId;
+    char* index;
+    char* name;
+    char* type;
+    double points;
+    int rating;
+} Problem;
+
+typedef struct {
+    int onTime; // 等于0就是补交的 这个不属于原来的字段
+    int id;
+    int contestId;
+    long creationTimeSeconds;
+    long relativeTimeSeconds;
+    Problem problem;
+    char* programmingLanguage;
+    char* verdict;
+    int passedTestCount;
+    long timeConsumedMillis;
+    long memoryConsumedBytes;
+    double points; // API可能为空，未提供时保持默认值
+    int participateType;// 参赛类型的一个枚举
+} Submission;
+
+typedef struct SubmissionNode {
+    Submission submission;
+    struct SubmissionNode* prev;
+    struct SubmissionNode* next;
+} SubmissionNode;
+
+typedef struct {
+    SubmissionNode* head;
+    int size;
+} SubmissionList;
+
+typedef struct {
+    int id;
+    char* name;
+    char* type;
+    char* phase;
+    int frozen;
+    long durationSeconds;
+    long startTimeSeconds;
+    long relativeTimeSeconds;
+} Contest;
+
+typedef struct{
+    RatingChange userRating;
+    SubmissionList submissions;
+} ContestRecord;
