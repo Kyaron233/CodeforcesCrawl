@@ -8,9 +8,19 @@
 #include "utils/json_utils.h"
 #include "utils/output.h"
 
+// 性能优化：为 contestId 建立时间索引，减少重复扫描
+typedef struct {
+    int contestId;
+    long startTimeSeconds;
+    long durationSeconds;
+} ContestTimeIndex;
+
 
 
 static int compare_submission_by_contest_id(const void* lhs, const void* rhs);
+static int compare_contest_time_by_id(const void* lhs, const void* rhs);
+static int build_contest_time_index(cJSON* contestList, ContestTimeIndex** out_list, int* out_count);
+static const ContestTimeIndex* find_contest_time_index(const ContestTimeIndex* list, int count, int contestId);
 static int submission_list_init(SubmissionList* list);
 static int submission_list_push_back(SubmissionList* list, const Submission* submission);
 static void add_string_or_null(cJSON* obj, const char* key, const char* value);
@@ -45,6 +55,11 @@ void parse_and_output(Data* coredata, char* username) {
     // 下面的contestlist已经直接打印了（在controller里面，直接打印原始字符串）
     cJSON* ContestList = cJSON_GetObjectItemCaseSensitive(parsed_data[ContestListData],"result");
 
+    // 性能优化：预先构建 contestId -> (startTime, duration) 索引
+    ContestTimeIndex* contest_index = NULL;
+    int contest_index_count = 0;
+    build_contest_time_index(ContestList, &contest_index, &contest_index_count);
+
     // if (ContestList != NULL) 
     //     output_json_with_username(ContestList, username, "contestList.json"); 
         
@@ -69,9 +84,20 @@ void parse_and_output(Data* coredata, char* username) {
                 json_try_get_long(item, "ratingUpdateTimeSeconds", &rating_changes[i].ratingUpdateTimeSeconds);
                 json_try_get_long(item, "oldRating", &rating_changes[i].oldRating);
                 json_try_get_long(item, "newRating", &rating_changes[i].newRating);
-                //时间 要从contestlist里面获取 找到
-                //这样太慢了 到时候优化一下
-                if (cJSON_IsArray(ContestList)) {
+                // 性能优化：通过二分在索引中查找比赛时间
+                if (contest_index != NULL && contest_index_count > 0) {
+                    const ContestTimeIndex* info = find_contest_time_index(
+                        contest_index,
+                        contest_index_count,
+                        rating_changes[i].contestId
+                    );
+                    if (info != NULL) {
+                        rating_changes[i].startTimeSeconds = info->startTimeSeconds;
+                        rating_changes[i].durationSeconds = info->durationSeconds;
+                    }
+                } 
+                else if (cJSON_IsArray(ContestList)) {
+                    // 索引构建失败时回退到线性扫描
                     int contestCount = cJSON_GetArraySize(ContestList);
                     for (int j = 0; j < contestCount; ++j) {
                         cJSON* contest = cJSON_GetArrayItem(ContestList, j);
@@ -176,12 +202,13 @@ void parse_and_output(Data* coredata, char* username) {
                     if (submissionList[idx].contestId <= 0) {
                         continue;
                     }
-                    if (submissionList[idx].contestId > rating_changes[i].contestId) 
-                        break;
-                    if (submissionList[idx].contestId != rating_changes[i].contestId) {
-                        nextSubmissionSearchIndex = idx;
+                    if (submissionList[idx].contestId < rating_changes[i].contestId) {
+                        // 性能优化：跳过已小于当前比赛的提交，避免下一轮重复扫描
+                        nextSubmissionSearchIndex = idx + 1;
                         continue;
                     }
+                    if (submissionList[idx].contestId > rating_changes[i].contestId) 
+                        break;
                     if (submissionList[idx].participateType != CONTESTANT) continue; // 注意这里舍弃了不是参赛者身份的提交
                     //下面判断是不是迟交 relativeTimeSeconds是从比赛开始到该代码提交经过的秒数
                     if (submissionList[idx].relativeTimeSeconds > contestRecords[i].userRating.durationSeconds){
@@ -220,11 +247,115 @@ void parse_and_output(Data* coredata, char* username) {
     cJSON* UserInfoResult = cJSON_GetObjectItemCaseSensitive(parsed_data[UserInfoData],"result");
     output_json_with_username(UserInfoResult,username,"userInfo.json");
 
+    if (contest_index != NULL) {
+        free(contest_index);
+    }
+
     for (int i = 0; i < QueneCount; ++i) {
         if (parsed_data[i] != NULL) {
             cJSON_Delete(parsed_data[i]);
         }
     }
+}
+// 首先按contestId把contest.list里面的数据排序
+static int compare_contest_time_by_id(const void* lhs, const void* rhs) {
+    const ContestTimeIndex* a = (const ContestTimeIndex*)lhs;
+    const ContestTimeIndex* b = (const ContestTimeIndex*)rhs;
+
+    if (a->contestId < b->contestId) {
+        return -1;
+    }
+    if (a->contestId > b->contestId) {
+        return 1;
+    }
+    return 0;
+}
+
+static int build_contest_time_index(cJSON* contestList, ContestTimeIndex** out_list, int* out_count) {
+    int contestCount = 0;
+    ContestTimeIndex* list = NULL;
+    int filled = 0;
+
+    if (out_list == NULL || out_count == NULL) {
+        return 0;
+    }
+
+    *out_list = NULL;
+    *out_count = 0;
+
+    if (!cJSON_IsArray(contestList)) {
+        return 0;
+    }
+
+    contestCount = cJSON_GetArraySize(contestList);
+    if (contestCount <= 0) {
+        return 0;
+    }
+
+    // 性能优化：一次性读取比赛信息并排序，后续可二分查找
+    list = (ContestTimeIndex*)calloc((size_t)contestCount, sizeof(ContestTimeIndex));
+    if (list == NULL) {
+        return 0;
+    }
+
+    for (int i = 0; i < contestCount; ++i) {
+        cJSON* contest = cJSON_GetArrayItem(contestList, i);
+        int contestId = 0;
+        long startTimeSeconds = 0;
+        long durationSeconds = 0;
+
+        if (!cJSON_IsObject(contest)) {
+            continue;
+        }
+
+        if (!json_try_get_int(contest, "id", &contestId)) {
+            continue;
+        }
+
+        json_try_get_long(contest, "startTimeSeconds", &startTimeSeconds);
+        json_try_get_long(contest, "durationSeconds", &durationSeconds);
+
+        list[filled].contestId = contestId;
+        list[filled].startTimeSeconds = startTimeSeconds;
+        list[filled].durationSeconds = durationSeconds;
+        filled += 1;
+    }
+
+    if (filled == 0) {
+        free(list);
+        return 0;
+    }
+
+    qsort(list, (size_t)filled, sizeof(ContestTimeIndex), compare_contest_time_by_id);
+    *out_list = list;
+    *out_count = filled;
+    return 1;
+}
+
+static const ContestTimeIndex* find_contest_time_index(const ContestTimeIndex* list, int count, int contestId) {
+    int left = 0;
+    int right = count - 1;
+
+    if (list == NULL || count <= 0) {
+        return NULL;
+    }
+
+    // 关键步骤：二分查找 contestId 对应的时间信息
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        int midId = list[mid].contestId;
+
+        if (midId == contestId) {
+            return &list[mid];
+        }
+        if (midId < contestId) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+
+    return NULL;
 }
 
 static int compare_submission_by_contest_id(const void* lhs, const void* rhs) {
