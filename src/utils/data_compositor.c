@@ -7,6 +7,7 @@
 #include "utils/data_compositor.h"
 #include "utils/json_utils.h"
 #include "utils/output.h"
+#include "utils/logger.h"
 
 // 性能优化：为 contestId 建立时间索引，减少重复扫描
 typedef struct {
@@ -36,17 +37,20 @@ static int participate_method(cJSON* item);
 // 干脆就在这个函数处理得了，顶多返回个status啥的
 void parse_and_output(Data* coredata, char* username) {
     cJSON* parsed_data[QueneCount] = {0};
-
+    log_message(INFO,"开始运行data_compositor..");
     if (coredata == NULL || username == NULL) {
+        log_message(ERROR,"获取用户名或爬虫数据时出错！");
         return;
     }
 
     for (int i = 0; i < QueneCount; ++i) {
         if (coredata[i].chunk == NULL || coredata[i].chunk[0] == '\0') {
+            log_message(WARNING,"当前parsed_data数组为空");
             parsed_data[i] = NULL;
             continue;
         }
         parsed_data[i] = cJSON_Parse(coredata[i].chunk);
+        log_message(INFO,"当前parsed_data数组正常");
     }
 
     

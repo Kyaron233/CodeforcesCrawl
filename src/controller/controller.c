@@ -4,6 +4,7 @@
 #include "utils/logger.h"
 #include "utils/data_compositor.h"
 #include "cJSON.h"
+#include "utils/output.h"
 #include "crawler/crawler.h"
 #define QUENE_LEN QueneCount  // 这里是我们需要使用curl请求数据的次数
 // 一个任务一个函数，一个函数一个status
@@ -41,8 +42,9 @@ void check(quene task_order){
         LogLevel level = coredata[task_order].size == 0 ? ERROR : WARNING;
         snprintf(message, sizeof(message), "%s未正常执行", taskname);
         log_message(level, message);
-        detailed_log(&corestatus[task_order]);
     }
+
+    detailed_log(&corestatus[task_order]);
 }
 
 void crawl_data(char* username){
@@ -71,7 +73,7 @@ void parse_data(Data* coredata){
 
 void startApp(char* username){
     curl_global_init(CURL_GLOBAL_DEFAULT);
-    if(logger_init()) {
+    if(!logger_init()) {
         fprintf(stderr, "日志文件初始化失败，使用控制台输出\n");
     }
    log_message(INFO,"开始执行任务...");
