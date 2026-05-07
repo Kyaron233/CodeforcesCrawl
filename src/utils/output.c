@@ -1,5 +1,13 @@
 #include "utils/output.h"
+#include <errno.h>
 #include <stdio.h>
+#include <string.h>
+
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <sys/stat.h>
+#endif
 
 #ifdef _WIN32
 #define OUTPUT_DIR "output\\"
@@ -7,6 +15,20 @@
 #define OUTPUT_DIR "output/"
 #endif
 
+static int ensure_output_dir_exists(void) {
+#ifdef _WIN32
+    if (_mkdir(OUTPUT_DIR) == 0 || errno == EEXIST) {
+        return 1;
+    }
+#else
+    if (mkdir(OUTPUT_DIR, 0777) == 0 || errno == EEXIST) {
+        return 1;
+    }
+#endif
+
+    fprintf(stderr, "failed to create output dir: %s (%s)\n", OUTPUT_DIR, strerror(errno));
+    return 0;
+}
 
 
 int output_json(const cJSON* root, const char* filename) {
@@ -46,6 +68,10 @@ int output_json_with_username(const cJSON* root, const char* username, const cha
         return 0;
     }
 
+    if (!ensure_output_dir_exists()) {
+        return 0;
+    }
+
     written = snprintf(complete_filename, sizeof(complete_filename), "%s%s_%s", OUTPUT_DIR, username, filename);
     if (written < 0 || (size_t)written >= sizeof(complete_filename)) {
         return 0;
@@ -61,6 +87,10 @@ int output_rawstring_with_username(const char* raw, const char* username, const 
     int ok = 0;
 
     if (raw == NULL || username == NULL || username[0] == '\0' || filename == NULL || filename[0] == '\0') {
+        return 0;
+    }
+
+    if (!ensure_output_dir_exists()) {
         return 0;
     }
 
