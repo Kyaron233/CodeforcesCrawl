@@ -150,11 +150,12 @@ void parse_and_output(Data* coredata, char* username) {
 
             //TODO ： 把以下内容封装到函数里面
             // Resolve contest id: prefer submission.contestId, fallback to problem.contestId.
+            submission->checked = 0;
             json_try_get_int(item, "id", &submission->id);
             json_try_get_int(item, "contestId", &submission_contest_id);
             json_try_get_long(item, "creationTimeSeconds", &submission->creationTimeSeconds);
             json_try_get_long(item, "relativeTimeSeconds", &submission->relativeTimeSeconds);
-            submission->participateType = participate_method(item);
+            submission->participateType = participate_method(item); // 参赛身份已经处理过了
 
             problem = cJSON_GetObjectItemCaseSensitive(item, "problem");
             if (cJSON_IsObject(problem)) {
@@ -166,6 +167,7 @@ void parse_and_output(Data* coredata, char* username) {
                 json_try_get_double(problem, "points", &submission->problem.points);
                 json_try_get_int(problem, "rating", &submission->problem.rating);
             }
+
 
             if (submission_contest_id <= 0) {
                 submission_contest_id = problem_contest_id;
@@ -185,13 +187,10 @@ void parse_and_output(Data* coredata, char* username) {
     }
 
     ContestRecord* contestRecords = NULL;
-    int *LateSubmissionsIndex = NULL; 
     if (UserAttendCount > 0) {
         contestRecords = (ContestRecord*)calloc((size_t)submissionCount, sizeof(ContestRecord));
-        LateSubmissionsIndex = (int*)calloc((size_t)UserAttendCount,sizeof(int));
-        long LateSubmissionsConut = 0;
         int nextSubmissionSearchIndex = 0;
-        if (contestRecords != NULL && LateSubmissionsIndex != NULL) {
+        if (contestRecords != NULL) {
             for (int i = 0; i < UserAttendCount; ++i) {
                 contestRecords[i].userRating = rating_changes[i];
                 submission_list_init(&contestRecords[i].submissions);
@@ -202,7 +201,7 @@ void parse_and_output(Data* coredata, char* username) {
 
                 // 在这之前已经对submission根据contestId进行排序了 ContestRecord不记录不在比赛的提交
                 for (int idx = nextSubmissionSearchIndex; idx < submissionCount; ++idx) {
-                    // Skip submissions without a contest id after resolution.
+                    // 跳过contestId异常或缺失的提交
                     if (submissionList[idx].contestId <= 0) {
                         continue;
                     }
@@ -213,11 +212,12 @@ void parse_and_output(Data* coredata, char* username) {
                     }
                     if (submissionList[idx].contestId > rating_changes[i].contestId) 
                         break;
-                    if (submissionList[idx].participateType != CONTESTANT) continue; // 注意这里舍弃了不是参赛者身份的提交
+                    
+                    submissionList[idx].checked = 1;
+                    contestRecords[i].userRating.participateType = submissionList[idx].participateType;
                     //下面判断是不是迟交 relativeTimeSeconds是从比赛开始到该代码提交经过的秒数
                     if (submissionList[idx].relativeTimeSeconds > contestRecords[i].userRating.durationSeconds){
                         submissionList[idx].onTime = 0;
-                        LateSubmissionsIndex[LateSubmissionsConut++] = idx;
                     }
                     else submissionList[idx].onTime=1;
                     submission_list_push_back(&contestRecords[i].submissions, &submissionList[idx]);
@@ -225,18 +225,16 @@ void parse_and_output(Data* coredata, char* username) {
             }
             output_contest_records_json(contestRecords, UserAttendCount, username); // 这里是因为我用的是自己modify的结构体
         }
-        // 输出所有迟交的提交记录
-        if (LateSubmissionsIndex != NULL && submissionList != NULL && submissionCount > 0) {
+        // 输出所有迟交和unchecked的提交记录
+        if (submissionList != NULL && submissionCount > 0) {
             cJSON* late_submissions = cJSON_CreateArray();
             if (late_submissions != NULL) {
-                for (long i = 0; i < LateSubmissionsConut; ++i) {
-                    int idx = LateSubmissionsIndex[i];
-                    if (idx < 0 || idx >= submissionCount) {
-                        continue;
-                    }
-                    cJSON* item = build_submission_json(&submissionList[idx]);
-                    if (item != NULL) {
-                        cJSON_AddItemToArray(late_submissions, item);
+                for (int i = 0; i < submissionCount; ++i) {
+                    if (submissionList[i].checked == 0 || submissionList[i].onTime == 0) {
+                        cJSON* item = build_submission_json(&submissionList[i]);
+                        if (item != NULL) {
+                            cJSON_AddItemToArray(late_submissions, item);
+                        }
                     }
                 }
                 output_json_with_username(late_submissions, username, "lateSubmissions.json");
@@ -473,6 +471,7 @@ static cJSON* build_submission_json(const Submission* submission) {
     cJSON_AddNumberToObject(obj, "passedTestCount", submission->passedTestCount);
     cJSON_AddNumberToObject(obj, "timeConsumedMillis", submission->timeConsumedMillis);
     cJSON_AddNumberToObject(obj, "memoryConsumedBytes", submission->memoryConsumedBytes);
+    cJSON_AddNumberToObject(obj,"paticipateType",submission->participateType);
 
     // 嵌套problem结构
     problem = build_problem_json(&submission->problem);

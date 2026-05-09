@@ -53,6 +53,7 @@ typedef struct {
     int contestId;
     char* contestName;
     int rank;
+    ParticipateType participateType;
     long ratingUpdateTimeSeconds;
     long oldRating;
     long newRating;
@@ -83,6 +84,7 @@ typedef struct {
     long memoryConsumedBytes;
     double points; // API可能为空，未提供时保持默认值
     int participateType;// 参赛类型的一个枚举
+    int checked;
 } Submission;
 
 typedef struct SubmissionNode {
