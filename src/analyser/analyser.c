@@ -58,14 +58,15 @@ void parse_and_output(Data* coredata, char* username) {
     //2.抓取比赛列表
     // 下面的contestlist已经直接打印了（在controller里面，直接打印原始字符串）
     cJSON* ContestList = cJSON_GetObjectItemCaseSensitive(parsed_data[ContestListData],"result");
-
+    if (ContestList != NULL) {
+        output_json_with_username(ContestList, username, "contestList.json");
+    }
     // 性能优化：预先构建 contestId -> (startTime, duration) 索引
     ContestTimeIndex* contest_index = NULL;
     int contest_index_count = 0;
     build_contest_time_index(ContestList, &contest_index, &contest_index_count);
 
-    // if (ContestList != NULL) 
-    //     output_json_with_username(ContestList, username, "contestList.json"); 
+    
         
 
     //2.(..)和用户参加的比赛的列表。 3.抓取用户参加比赛的排名，获得分数,各题目的分数

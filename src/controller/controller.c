@@ -79,7 +79,6 @@ void startApp(char* username){
    log_message(INFO,"开始执行任务...");
    
    crawl_data(username);
-   output_rawstring_with_username(coredata[ContestListData].chunk,username,"contestlist.json"); // 直接打印原始字符串（省一点性能）
    parse_and_output(coredata,username);
    
    
