@@ -181,13 +181,16 @@ void parse_and_output(Data* coredata, char* username) {
             json_try_get_long(item, "memoryConsumedBytes", &submission->memoryConsumedBytes);
         }
         //TODO ： 把以上内容封装到函数
+        char msg[1000];
+        sprintf(msg,"%s有%d条提交！",username,submissionCount);
+        log_message(WARNING,msg);
         if (submissionCount > 1) {
             qsort(submissionList, (size_t)submissionCount, sizeof(Submission), compare_submission_by_contest_id);
         }
     }
 
     ContestRecord* contestRecords = NULL;
-    if (UserAttendCount > 0) {
+    if (UserAttendCount >= 0) { // 加个等于，防止有人一场正式比赛不打
         contestRecords = (ContestRecord*)calloc((size_t)submissionCount, sizeof(ContestRecord));
         int nextSubmissionSearchIndex = 0;
         if (contestRecords != NULL) {
