@@ -18,7 +18,12 @@ add_executable(codeforce
     cJSON/cJSON.c
     src/utils/arg_utils.c
     src/utils/logger.c
-    src/utils/api_compositor.c
+    src/utils/json_utils.c
+    src/utils/data_compositor.c
+    src/utils/output.c
+    src/utils/time.c
+    src/crawler/crawler.c
+    src/controller/controller.c
     )
 target_include_directories(codeforce PRIVATE
     "cJSON"
