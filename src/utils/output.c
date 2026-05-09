@@ -2,7 +2,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-
+#include "utils/logger.h"
 #ifdef _WIN32
 #include <direct.h>
 #else
@@ -46,13 +46,22 @@ int output_json(const cJSON* root, const char* filename) {
     }
 
     out = fopen(filename, "w");
+    char msg[100];
     if (out == NULL) {
+        sprintf(msg,"无法打开指定文件：%s",filename);
+        log_message(ERROR,msg);
         cJSON_free(json_text);
         return 0;
     }
 
     if (fputs(json_text, out) != EOF) {
+        sprintf(msg,"%s写入成功",filename);
+        log_message(INFO,msg);
         ok = 1;
+    }
+    else {
+        sprintf(msg,"%s写入失败",filename);
+        log_message(ERROR,msg);
     }
 
     fclose(out);
@@ -82,6 +91,7 @@ int output_json_with_username(const cJSON* root, const char* username, const cha
 
 int output_rawstring_with_username(const char* raw, const char* username, const char* filename) {
     char complete_filename[512];
+    char msg[100];
     int written = 0;
     FILE* out = NULL;
     int ok = 0;
@@ -109,5 +119,13 @@ int output_rawstring_with_username(const char* raw, const char* username, const 
     }
 
     fclose(out);
+    if(ok) {
+        sprintf(msg,"output_rawstring成功执行！");
+        log_message(INFO,msg);
+    }
+    else {
+        sprintf(msg,"output_rawstring出错！");
+        log_message(ERROR,msg);
+    }
     return ok;
 }
