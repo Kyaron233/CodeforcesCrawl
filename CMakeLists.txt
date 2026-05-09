@@ -19,7 +19,7 @@ add_executable(codeforce
     src/utils/arg_utils.c
     src/utils/logger.c
     src/utils/json_utils.c
-    src/utils/data_compositor.c
+    src/analyser/analyser.c
     src/utils/output.c
     src/utils/time.c
     src/crawler/crawler.c
