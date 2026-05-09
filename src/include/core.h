@@ -1,7 +1,7 @@
 #pragma once
 #define ll long long
 #include <curl/curl.h>
-
+#define TIMESTAMP_180 15552000
 typedef struct {
     char* chunk;
     size_t size;

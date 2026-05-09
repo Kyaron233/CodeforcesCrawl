@@ -17,7 +17,7 @@ typedef struct {
 } ContestTimeIndex;
 
 
-
+char logmsg[1000];
 static int compare_submission_by_contest_id(const void* lhs, const void* rhs);
 static int compare_contest_time_by_id(const void* lhs, const void* rhs);
 static int build_contest_time_index(cJSON* contestList, ContestTimeIndex** out_list, int* out_count);
@@ -33,7 +33,8 @@ static void output_contest_records_json(const ContestRecord* records, int count,
 // static int check_ontime(long updateTime,long deadline); // 从时间上检查是否超时
 static int participate_method(cJSON* item);
 
-
+int contestsIn180days = 0;
+int maxRatingIn180days = 0;
 // 干脆就在这个函数处理得了，顶多返回个status啥的
 void parse_and_output(Data* coredata, char* username) {
     cJSON* parsed_data[QueneCount] = {0};
@@ -149,7 +150,6 @@ void parse_and_output(Data* coredata, char* username) {
                 continue;
             }
 
-            //TODO ： 把以下内容封装到函数里面
             // Resolve contest id: prefer submission.contestId, fallback to problem.contestId.
             submission->checked = 0;
             json_try_get_int(item, "id", &submission->id);
@@ -181,10 +181,9 @@ void parse_and_output(Data* coredata, char* username) {
             json_try_get_long(item, "timeConsumedMillis", &submission->timeConsumedMillis);
             json_try_get_long(item, "memoryConsumedBytes", &submission->memoryConsumedBytes);
         }
-        //TODO ： 把以上内容封装到函数
-        char msg[1000];
-        sprintf(msg,"%s有%d条提交！",username,submissionCount);
-        log_message(WARNING,msg);
+        
+        sprintf(logmsg,"%s有%d条提交！",username,submissionCount);
+        log_message(WARNING,logmsg);
         if (submissionCount > 1) {
             qsort(submissionList, (size_t)submissionCount, sizeof(Submission), compare_submission_by_contest_id);
         }
@@ -218,6 +217,11 @@ void parse_and_output(Data* coredata, char* username) {
                         break;
                     
                     submissionList[idx].checked = 1;
+                    if(contestRecords[i].userRating.ratingUpdateTimeSeconds - time(NULL)+TIMESTAMP_180>=0) {
+                        // 180天以内
+                        contestsIn180days++;
+                        maxRatingIn180days = contestRecords[i].userRating.newRating >= maxRatingIn180days? contestRecords[i].userRating.newRating:maxRatingIn180days;
+                    } 
                     contestRecords[i].userRating.participateType = submissionList[idx].participateType;
                     //下面判断是不是迟交 relativeTimeSeconds是从比赛开始到该代码提交经过的秒数
                     if (submissionList[idx].relativeTimeSeconds > contestRecords[i].userRating.durationSeconds){
@@ -250,9 +254,16 @@ void parse_and_output(Data* coredata, char* username) {
     
 
     //先把简单部分做了 主页
-    cJSON* UserInfoResult = cJSON_GetObjectItemCaseSensitive(parsed_data[UserInfoData],"result");
+    cJSON* UserInfoResultArray = cJSON_GetObjectItemCaseSensitive(parsed_data[UserInfoData],"result");
+    cJSON* UserInfoResult = cJSON_GetArrayItem(UserInfoResultArray,0);
+    if(!cJSON_IsArray(UserInfoResult)){
+        log_message(WARNING,"UserInfoResult不是数组");
+    }
+    cJSON_AddNumberToObject(UserInfoResult,"contestsIn180days",contestsIn180days);
+    cJSON_AddNumberToObject(UserInfoResult,"maxRatingIn180days",maxRatingIn180days);
     output_json_with_username(UserInfoResult,username,"userInfo.json");
-
+    sprintf(logmsg,"%s在180天内，最高分为%d，参加了%d场比赛。",username,maxRatingIn180days,contestsIn180days);
+    log_message(WARNING,logmsg);
     if (contest_index != NULL) {
         free(contest_index);
     }
