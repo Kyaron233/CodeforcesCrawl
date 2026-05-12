@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<header>
+    <title>codeforces成绩分析</title>
+</header>
+<body>
+    <div id="userInfo">
+        <img id="avatar" src="">
+        <h2>个人信息</h2>
+        <script src="js/UserInfo.js"></script>
+        <h4 id="username">
+            用户名:<span id="usernameValue"></span>
+        </h4>
+        <div id="fullName">
+            姓名: <span id="fullNameValue">加载中...</span>
+        </div>
+        <div id="organization">
+            组织: <span id="organizationValue">加载中...</span>
+        </div>
+        <div id="country">
+            国家: <span id="countryValue">加载中...</span>
+        </div>
+        <div id="city">
+            地区: <span id="cityValue">加载中...</span>
+        </div>
+        <div id="level">
+            头衔: <span id="levelValue">加载中...</span>
+        </div>
+        <div id="matches">
+            参加比赛的次数：<span id="matchesValue">加载中...</span>
+        </div>
+        <div id="maxRating">
+            最高 rating：<span id="maxRatingValue">加载中...</span>
+        </div>
+        <div id="maxRank">
+            最高段位: <span id="maxRankValue">加载中...</span>
+        </div>
+        <div id="contestAttended">
+            参加的总比赛: <span id="contestAttendedValue">加载中...</span>
+        </div>
+        <div id="matches180">
+            近180天比赛次数：<span id="matches180Value">加载中...</span>
+        </div>
+        <div id="maxLevel180">
+            近180天最高等级分：<span id="maxLevel180Value">加载中...</span>
+        </div>
+
+        <script>
+            const userData = window.UserInfo || {}
+            console.log(userData)
+            const avatar = document.getElementById("avatar")
+            avatar.src = userData.avatar || "https://userpic.codeforces.org/no-avatar.jpg"
+            document.getElementById("usernameValue").textContent = userData.handle
+            const fullName = [userData.firstName, userData.lastName].filter(Boolean).join(" ")
+            document.getElementById("fullNameValue").textContent = fullName || "加载中..."
+            document.getElementById("organizationValue").textContent = userData.organization || "加载中..."
+            document.getElementById("countryValue").textContent = userData.country || "加载中..."
+            document.getElementById("cityValue").textContent = userData.city || "加载中..."
+            document.getElementById("levelValue").textContent = userData.rank
+            document.getElementById("matchesValue").textContent = userData.contestAttended ?? "加载中..."
+            document.getElementById("maxRatingValue").textContent = userData.maxRating
+            document.getElementById("maxRankValue").textContent = userData.maxRank || "加载中..."
+            document.getElementById("contestAttendedValue").textContent = userData.contestAttended ?? "加载中..."
+            document.getElementById("matches180Value").textContent = userData.contestsIn180days ?? "加载中..."
+            document.getElementById("maxLevel180Value").textContent = userData.maxRatingIn180days ?? "加载中..."
+            
+        </script>
+    </div>
+    <div id="contestList">
+
+    </div>
+    <div id="userRating">
+
+    </div>
+    <div id="lateSubmission">
+
+    </div>
+</body>
