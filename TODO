@@ -1,0 +1,4 @@
+修改cmakelist，让生成的文件路径为根目录
+然后在根目录下，如果有./frontend/assets/data，就把数据放进去
+否则，输出到./output
+两种情况都需要打好日志
