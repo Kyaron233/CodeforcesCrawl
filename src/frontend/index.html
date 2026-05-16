@@ -1,0 +1,1472 @@
+<!doctype html>
+<html lang="zh">
+	<head>
+		<meta charset="utf-8">
+		<title>Codeforces Crawl</title>
+		<style>
+			body {
+				margin: 0;
+				font-family: Arial, sans-serif;
+			}
+
+			.layout {
+				display: flex;
+				min-height: 100vh;
+			}
+
+			.sidebar {
+				width: 180px;
+				border-right: 1px solid #ddd;
+				padding: 12px;
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+
+			.sidebar button {
+				text-align: left;
+			}
+
+			.content {
+				flex: 1;
+				padding: 16px;
+			}
+
+			.topbar {
+				display: flex;
+				justify-content: flex-end;
+				align-items: center;
+				gap: 8px;
+				margin-bottom: 12px;
+			}
+
+			.page {
+				display: none;
+			}
+
+			.page.active {
+				display: block;
+			}
+
+			.hidden {
+				display: none;
+			}
+
+			.user-card {
+				display: flex;
+				gap: 12px;
+				align-items: flex-start;
+			}
+
+			.user-card img {
+				width: 80px;
+				height: 80px;
+				object-fit: cover;
+				border: 1px solid #ddd;
+				background: #f2f2f2;
+			}
+
+			.record-header {
+				margin-top: 16px;
+			}
+
+			.record-section {
+				margin-top: 12px;
+			}
+
+			.record-toolbar {
+				display: flex;
+				gap: 12px;
+				align-items: center;
+				margin-bottom: 10px;
+			}
+
+			.record-filters {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				align-items: center;
+				margin-bottom: 10px;
+			}
+
+			.record-filters input {
+				padding: 2px 4px;
+			}
+
+			.record-list {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+			}
+
+			.record-item {
+				border: 1px solid #ddd;
+				padding: 8px;
+			}
+
+			.record-field {
+				margin: 2px 0;
+			}
+
+			.diff-positive {
+				color: #0a7a0a;
+			}
+
+			.diff-negative {
+				color: #b00020;
+			}
+
+			.record-actions {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+				margin-top: 6px;
+			}
+
+			.record-problems {
+				margin-top: 6px;
+				padding-left: 12px;
+			}
+
+			.record-problem {
+				border: 1px dashed #ccc;
+				padding: 6px;
+				margin-bottom: 6px;
+			}
+
+			.contest-toolbar {
+				display: flex;
+				gap: 12px;
+				align-items: center;
+				margin-bottom: 10px;
+			}
+
+			.contest-filters {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				align-items: center;
+				margin-bottom: 10px;
+			}
+
+			.contest-filters input {
+				padding: 2px 4px;
+			}
+
+			.late-toolbar {
+				display: flex;
+				gap: 12px;
+				align-items: center;
+				margin-bottom: 10px;
+			}
+
+			.late-filters {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				align-items: center;
+				margin-bottom: 10px;
+			}
+
+			.late-filters input {
+				padding: 2px 4px;
+			}
+
+			.late-list {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+			}
+
+			.late-item {
+				display: flex;
+				gap: 16px;
+				border: 1px solid #ddd;
+				padding: 8px;
+				align-items: flex-start;
+			}
+
+			.late-left {
+				flex: 1;
+				min-width: 0;
+			}
+
+			.late-right {
+				min-width: 200px;
+				max-width: 320px;
+			}
+
+			.late-field {
+				margin: 2px 0;
+			}
+
+			.late-problem-toggle {
+				display: flex;
+				gap: 6px;
+				align-items: center;
+				margin-top: 6px;
+			}
+
+			.late-toggle {
+				width: 12px;
+				height: 12px;
+				border: 1px solid #333;
+				background: #fff;
+				padding: 0;
+				cursor: pointer;
+			}
+
+			.late-toggle.open {
+				background: #333;
+			}
+
+			.late-problem {
+				margin-top: 6px;
+			}
+
+			.late-problem.hidden {
+				display: none;
+			}
+
+			.modal {
+				position: fixed;
+				inset: 0;
+				background: rgba(0, 0, 0, 0.5);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				z-index: 1000;
+			}
+
+			.modal.hidden {
+				display: none;
+			}
+
+			.modal-content {
+				background: #fff;
+				width: min(800px, 92vw);
+				max-height: 80vh;
+				overflow: auto;
+				padding: 12px;
+				border-radius: 4px;
+			}
+
+			.modal-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 8px;
+			}
+
+			.modal-controls {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+				margin-bottom: 8px;
+			}
+
+			.submission-list {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+
+			.submission-item {
+				border: 1px solid #ddd;
+				padding: 6px;
+			}
+
+			.submission-field {
+				margin: 2px 0;
+			}
+
+			.pagination {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+			}
+
+			.contest-list {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+			}
+
+			.contest-item {
+				border: 1px solid #ddd;
+				padding: 8px;
+			}
+
+			.contest-group {
+				border: 1px dashed #ccc;
+				padding: 8px;
+			}
+
+			.contest-group-title {
+				font-weight: bold;
+				margin-bottom: 6px;
+			}
+
+			.contest-field {
+				margin: 2px 0;
+			}
+
+			.fields {
+				margin-top: 8px;
+			}
+
+			.field {
+				margin: 4px 0;
+			}
+
+			.placeholder {
+				color: #666;
+			}
+
+			.status {
+				color: #b00;
+				margin-top: 8px;
+			}
+		</style>
+		<script src="js/fetchData.js"></script>
+	</head>
+	<body>
+		<div class="layout">
+			<nav class="sidebar">
+				<button type="button" data-page="home" aria-current="page">主页</button>
+				<button type="button" id="recordNav">竞赛记录</button>
+				<button type="button" data-page="contests">竞赛列表</button>
+				<button type="button" data-page="late">迟交列表</button>
+			</nav>
+			<main class="content">
+				<div class="topbar">
+					<label for="userSelect">User</label>
+					<select id="userSelect">
+						<option value="">Loading...</option>
+					</select>
+				</div>
+
+				<section id="page-home" class="page active">
+					<h2>主页</h2>
+					<div class="user-card">
+						<img id="userAvatar" alt="avatar" src="">
+						<div class="fields">
+							<div class="field">Handle: <span id="userHandle">-</span></div>
+							<div class="field">Rank: <span id="userRank">-</span></div>
+							<div class="field">Max rating: <span id="userMaxRating">-</span></div>
+							<div class="field">Max rank: <span id="userMaxRank">-</span></div>
+							<div class="field">Max rating (180 days): <span id="userMaxRating180">-</span></div>
+							<div class="field">Contests (180 days): <span id="userContests180">-</span></div>
+						</div>
+					</div>
+					<div id="statusMessage" class="status"></div>
+					<div class="record-header">
+						<button type="button" id="recordToggle">竞赛记录</button>
+					</div>
+					<div id="recordSection" class="record-section hidden">
+						<div class="record-toolbar">
+							<div id="recordCount">总条数: -</div>
+							<div class="pagination">
+								<button type="button" id="recordPrev">Prev</button>
+								<span id="recordPageInfo">Page 1 / 1</span>
+								<button type="button" id="recordNext">Next</button>
+							</div>
+						</div>
+						<div class="record-filters">
+							<label for="recordSearch">搜索</label>
+							<input id="recordSearch" type="text" placeholder="搜索 id 或 比赛名称">
+							<label for="recordStartDate">开始日期</label>
+							<input id="recordStartDate" type="date">
+							<label for="recordEndDate">截止日期</label>
+							<input id="recordEndDate" type="date">
+							<button type="button" id="recordReset">重置</button>
+						</div>
+						<div id="recordList" class="record-list"></div>
+						<div id="recordStatus" class="status"></div>
+					</div>
+				</section>
+
+				<section id="page-contests" class="page">
+					<h2>竞赛列表</h2>
+					<div class="contest-toolbar">
+						<div id="contestCount">总条数: -</div>
+						<div class="pagination">
+							<button type="button" id="contestPrev">Prev</button>
+							<span id="contestPageInfo">Page 1 / 1</span>
+							<button type="button" id="contestNext">Next</button>
+						</div>
+					</div>
+					<div class="contest-filters">
+						<label for="contestSearch">搜索</label>
+						<input id="contestSearch" type="text" placeholder="搜索 id 或 比赛名称">
+						<label for="contestStartDate">开始日期</label>
+						<input id="contestStartDate" type="date">
+						<label for="contestEndDate">截止日期</label>
+						<input id="contestEndDate" type="date">
+						<button type="button" id="contestReset">重置</button>
+					</div>
+					<div id="contestList" class="contest-list"></div>
+					<div id="contestStatus" class="status"></div>
+				</section>
+
+				<section id="page-late" class="page">
+					<h2>&#36831;&#20132;&#21015;&#34920;</h2>
+					<div class="late-toolbar">
+						<div id="lateCount">总条数: -</div>
+					</div>
+					<div class="late-filters">
+						<label for="lateSearch">搜索</label>
+						<input id="lateSearch" type="text" placeholder="搜索 id 或 题目名称">
+						<label for="lateStartDate">开始日期</label>
+						<input id="lateStartDate" type="date">
+						<label for="lateEndDate">截止日期</label>
+						<input id="lateEndDate" type="date">
+						<button type="button" id="lateReset">重置</button>
+					</div>
+					<div id="lateList" class="late-list"></div>
+					<div id="lateStatus" class="status"></div>
+				</section>
+			</main>
+		</div>
+
+		<div id="submissionModal" class="modal hidden" role="dialog" aria-modal="true">
+			<div class="modal-content">
+				<div class="modal-header">
+					<div id="submissionTitle">提交记录</div>
+					<button type="button" id="submissionClose">关闭</button>
+				</div>
+				<div class="modal-controls">
+					<label for="submissionFilter">题号</label>
+					<select id="submissionFilter"></select>
+				</div>
+				<div id="submissionList" class="submission-list"></div>
+			</div>
+		</div>
+
+		<script>
+			const DEFAULT_AVATAR = "https://userpic.codeforces.org/no-avatar.jpg";
+
+			const pageButtons = Array.from(document.querySelectorAll(".sidebar button"));
+			const pages = {
+				home: document.getElementById("page-home"),
+				contests: document.getElementById("page-contests"),
+				late: document.getElementById("page-late")
+			};
+
+			const userSelect = document.getElementById("userSelect");
+			const statusMessage = document.getElementById("statusMessage");
+			const userAvatar = document.getElementById("userAvatar");
+			const userHandle = document.getElementById("userHandle");
+			const userRank = document.getElementById("userRank");
+			const userMaxRating = document.getElementById("userMaxRating");
+			const userMaxRank = document.getElementById("userMaxRank");
+			const userMaxRating180 = document.getElementById("userMaxRating180");
+			const userContests180 = document.getElementById("userContests180");
+			const contestCount = document.getElementById("contestCount");
+			const contestPrev = document.getElementById("contestPrev");
+			const contestNext = document.getElementById("contestNext");
+			const contestPageInfo = document.getElementById("contestPageInfo");
+			const contestList = document.getElementById("contestList");
+			const contestStatus = document.getElementById("contestStatus");
+			const contestSearch = document.getElementById("contestSearch");
+			const contestStartDate = document.getElementById("contestStartDate");
+			const contestEndDate = document.getElementById("contestEndDate");
+			const contestReset = document.getElementById("contestReset");
+			const lateCount = document.getElementById("lateCount");
+			const lateSearch = document.getElementById("lateSearch");
+			const lateStartDate = document.getElementById("lateStartDate");
+			const lateEndDate = document.getElementById("lateEndDate");
+			const lateList = document.getElementById("lateList");
+			const lateStatus = document.getElementById("lateStatus");
+			const recordToggle = document.getElementById("recordToggle");
+			const recordNav = document.getElementById("recordNav");
+			const recordSection = document.getElementById("recordSection");
+			const recordCount = document.getElementById("recordCount");
+			const recordPrev = document.getElementById("recordPrev");
+			const recordNext = document.getElementById("recordNext");
+			const recordPageInfo = document.getElementById("recordPageInfo");
+			const recordList = document.getElementById("recordList");
+			const recordStatus = document.getElementById("recordStatus");
+			const recordSearch = document.getElementById("recordSearch");
+			const recordStartDate = document.getElementById("recordStartDate");
+			const recordEndDate = document.getElementById("recordEndDate");
+			const recordReset = document.getElementById("recordReset");
+			const submissionModal = document.getElementById("submissionModal");
+			const submissionClose = document.getElementById("submissionClose");
+			const submissionFilter = document.getElementById("submissionFilter");
+			const submissionList = document.getElementById("submissionList");
+			const submissionTitle = document.getElementById("submissionTitle");
+			const lateReset = document.getElementById("lateReset");
+			const CONTESTS_PER_PAGE = 20;
+			const RECORDS_PER_PAGE = 10;
+			let contestData = [];
+			let contestPage = 1;
+			let lateData = [];
+			let recordData = [];
+			let recordPage = 1;
+			let currentSubmissions = [];
+
+			function setActivePage(pageKey) {
+				Object.keys(pages).forEach((key) => {
+					const isActive = key === pageKey;
+					pages[key].classList.toggle("active", isActive);
+				});
+
+				pageButtons.forEach((button) => {
+					const isCurrent = button.dataset.page === pageKey;
+					if (isCurrent) {
+						button.setAttribute("aria-current", "page");
+					} else {
+						button.removeAttribute("aria-current");
+					}
+				});
+			}
+
+			function normalizeUsers(data) {
+				if (!data) {
+					return [];
+				}
+
+				if (Array.isArray(data)) {
+					return data.map(extractHandle).filter(Boolean);
+				}
+
+				if (Array.isArray(data.result)) {
+					return data.result.map(extractHandle).filter(Boolean);
+				}
+
+				const single = extractHandle(data);
+				return single ? [single] : [];
+			}
+
+			function extractHandle(item) {
+				if (typeof item === "string") {
+					return item;
+				}
+				if (!item || typeof item !== "object") {
+					return "";
+				}
+				return item.handle || item.username || item.name || item.user || "";
+			}
+
+			function setText(el, value) {
+				el.textContent = value == null || value === "" ? "-" : String(value);
+			}
+
+			function renderUserInfo(info) {
+				userAvatar.src = info && info.avatar ? info.avatar : DEFAULT_AVATAR;
+				setText(userHandle, info && info.handle);
+				setText(userRank, info && info.rank);
+				setText(userMaxRating, info && info.maxRating);
+				setText(userMaxRank, info && info.maxRank);
+				setText(userMaxRating180, info && info.maxRatingIn180days);
+				setText(userContests180, info && info.contestsIn180days);
+			}
+
+			function normalizeUserInfo(data) {
+				if (!data) {
+					return null;
+				}
+
+				if (Array.isArray(data)) {
+					return data[0] || null;
+				}
+
+				if (Array.isArray(data.result)) {
+					return data.result[0] || null;
+				}
+
+				return data;
+			}
+
+			function normalizeContestList(data) {
+				if (!data) {
+					return [];
+				}
+
+				if (Array.isArray(data)) {
+					return data;
+				}
+
+				if (Array.isArray(data.result)) {
+					return data.result;
+				}
+
+				if (Array.isArray(data.contests)) {
+					return data.contests;
+				}
+
+				return [];
+			}
+
+			function normalizeLateList(data) {
+				if (!data) {
+					return [];
+				}
+
+				if (Array.isArray(data)) {
+					return data;
+				}
+
+				if (Array.isArray(data.result)) {
+					return data.result;
+				}
+
+				if (Array.isArray(data.submissions)) {
+					return data.submissions;
+				}
+
+				return [];
+			}
+
+			function normalizeContestRecordList(data) {
+				if (!data) {
+					return [];
+				}
+
+				if (Array.isArray(data)) {
+					return data;
+				}
+
+				if (Array.isArray(data.result)) {
+					return data.result;
+				}
+
+				if (Array.isArray(data.records)) {
+					return data.records;
+				}
+
+				return [];
+			}
+
+			function formatDuration(seconds) {
+				if (seconds == null || Number.isNaN(Number(seconds))) {
+					return "-";
+				}
+				const raw = Number(seconds);
+				const sign = raw < 0 ? "-" : "";
+				const total = Math.abs(Math.trunc(raw));
+				const hours = Math.floor(total / 3600);
+				const minutes = Math.floor((total % 3600) / 60);
+				const secs = total % 60;
+				return `${sign}${hours}h ${minutes}m ${secs}s`;
+			}
+
+			function formatRelativeTime(seconds) {
+				if (seconds == null || Number.isNaN(Number(seconds))) {
+					return "-";
+				}
+				const raw = Number(seconds);
+				const sign = raw < 0 ? "-" : "";
+				let total = Math.abs(Math.trunc(raw));
+				const secondsInDay = 86400;
+				const secondsInYear = 365 * secondsInDay;
+				const years = Math.floor(total / secondsInYear);
+				total -= years * secondsInYear;
+				const days = Math.floor(total / secondsInDay);
+				total -= days * secondsInDay;
+				const hours = Math.floor(total / 3600);
+				const minutes = Math.floor((total % 3600) / 60);
+				const secs = total % 60;
+
+				if (years > 0) {
+					return `${sign}${years}y ${days}d ${hours}h ${minutes}m ${secs}s`;
+				}
+				if (days > 0) {
+					return `${sign}${days}d ${hours}h ${minutes}m ${secs}s`;
+				}
+				return `${sign}${hours}h ${minutes}m ${secs}s`;
+			}
+
+			function formatDate(seconds) {
+				if (seconds == null || Number.isNaN(Number(seconds))) {
+					return "-";
+				}
+				const date = new Date(Number(seconds) * 1000);
+				if (Number.isNaN(date.getTime())) {
+					return "-";
+				}
+				const yyyy = date.getFullYear();
+				const mm = String(date.getMonth() + 1).padStart(2, "0");
+				const dd = String(date.getDate()).padStart(2, "0");
+				const hh = String(date.getHours()).padStart(2, "0");
+				const min = String(date.getMinutes()).padStart(2, "0");
+				const ss = String(date.getSeconds()).padStart(2, "0");
+				return `${yyyy}/${mm}/${dd} ${hh}:${min}:${ss}`;
+			}
+
+			function formatContestValue(key, value) {
+				if (key === "durationSeconds") {
+					return formatDuration(value);
+				}
+				if (key === "relativeTimeSeconds") {
+					return formatRelativeTime(value);
+				}
+				if (key === "startTimeSeconds") {
+					return formatDate(value);
+				}
+				if (value == null || value === "") {
+					return "-";
+				}
+				return String(value);
+			}
+
+			function formatLateValue(key, value) {
+				if (key === "creationTimeSeconds") {
+					return formatDate(value);
+				}
+				if (key === "relativeTimeSeconds") {
+					return formatRelativeTime(value);
+				}
+				if (value == null || value === "") {
+					return "-";
+				}
+				return String(value);
+			}
+
+			function formatRecordValue(key, value) {
+				if (key === "relativeTimeSeconds") {
+					return formatRelativeTime(value);
+				}
+				if (key.endsWith("TimeSeconds")) {
+					return formatDate(value);
+				}
+				if (value == null || value === "") {
+					return "-";
+				}
+				return String(value);
+			}
+
+			function formatSubmissionValue(key, value) {
+				if (key === "creationTimeSeconds") {
+					return formatDate(value);
+				}
+				if (key === "relativeTimeSeconds") {
+					return formatRelativeTime(value);
+				}
+				if (value == null || value === "") {
+					return "-";
+				}
+				return String(value);
+			}
+
+			function getRecordSubmissions(record) {
+				if (!record) {
+					return [];
+				}
+				return record.Submission || record.submission || record.submissions || [];
+			}
+
+			function getUniqueProblems(submissions) {
+				const map = new Map();
+				submissions.forEach((submission) => {
+					const problem = submission && submission.problem;
+					const index = problem && problem.index;
+					if (!index || map.has(index)) {
+						return;
+					}
+					map.set(index, problem);
+				});
+				return Array.from(map.entries()).map(([index, problem]) => ({
+					index,
+					problem
+				}));
+			}
+
+			function applyLateFilters(data) {
+				let filtered = data || [];
+				const query = lateSearch.value.trim().toLowerCase();
+				if (query) {
+					filtered = filtered.filter((item) => {
+						if (!item) {
+							return false;
+						}
+						const idText = item.id != null ? String(item.id) : "";
+						const contestText = item.contestId != null ? String(item.contestId) : "";
+						const verdictText = item.verdict ? String(item.verdict) : "";
+						const langText = item.programmingLanguage ? String(item.programmingLanguage) : "";
+						const problemName = item.problem && item.problem.name ? String(item.problem.name) : "";
+						return (
+							idText.includes(query) ||
+							contestText.includes(query) ||
+							verdictText.toLowerCase().includes(query) ||
+							langText.toLowerCase().includes(query) ||
+							problemName.toLowerCase().includes(query)
+						);
+					});
+				}
+
+				const startValue = lateStartDate.value;
+				const endValue = lateEndDate.value;
+				if (startValue || endValue) {
+					const startMs = startValue ? new Date(`${startValue}T00:00:00`).getTime() : null;
+					const endMs = endValue ? new Date(`${endValue}T23:59:59`).getTime() : null;
+					filtered = filtered.filter((item) => {
+						const createdSeconds = item && item.creationTimeSeconds;
+						if (createdSeconds == null) {
+							return false;
+						}
+						const createdMs = Number(createdSeconds) * 1000;
+						if (Number.isNaN(createdMs)) {
+							return false;
+						}
+						if (startMs != null && createdMs < startMs) {
+							return false;
+						}
+						if (endMs != null && createdMs > endMs) {
+							return false;
+						}
+						return true;
+					});
+				}
+
+				return filtered;
+			}
+
+			function applyRecordFilters(data) {
+				let filtered = data || [];
+				const query = recordSearch.value.trim().toLowerCase();
+				if (query) {
+					filtered = filtered.filter((record) => {
+						if (!record) {
+							return false;
+						}
+						const idText = record.contestId != null ? String(record.contestId) : "";
+						const nameText = record.contestName ? String(record.contestName) : "";
+						return idText.includes(query) || nameText.toLowerCase().includes(query);
+					});
+				}
+
+				const startValue = recordStartDate.value;
+				const endValue = recordEndDate.value;
+				if (startValue || endValue) {
+					const startMs = startValue ? new Date(`${startValue}T00:00:00`).getTime() : null;
+					const endMs = endValue ? new Date(`${endValue}T23:59:59`).getTime() : null;
+					filtered = filtered.filter((record) => {
+						const timeSeconds = record && record.ratingUpdateTimeSeconds;
+						if (timeSeconds == null) {
+							return false;
+						}
+						const recordMs = Number(timeSeconds) * 1000;
+						if (Number.isNaN(recordMs)) {
+							return false;
+						}
+						if (startMs != null && recordMs < startMs) {
+							return false;
+						}
+						if (endMs != null && recordMs > endMs) {
+							return false;
+						}
+						return true;
+					});
+				}
+
+				return filtered;
+			}
+
+			function renderLateList() {
+				const total = lateData.length;
+				const filtered = applyLateFilters(lateData);
+				lateCount.textContent = `总条数: ${total}，筛选后: ${filtered.length}`;
+				lateList.innerHTML = "";
+
+				if (filtered.length === 0) {
+					const empty = document.createElement("div");
+					empty.className = "placeholder";
+					empty.textContent = "No data";
+					lateList.appendChild(empty);
+					return;
+				}
+
+				filtered.forEach((item) => {
+					const wrapper = document.createElement("div");
+					wrapper.className = "late-item";
+
+					const left = document.createElement("div");
+					left.className = "late-left";
+					const right = document.createElement("div");
+					right.className = "late-right";
+
+					Object.keys(item || {}).forEach((key) => {
+						if (key === "onTime" || key === "problem") {
+							return;
+						}
+						const field = document.createElement("div");
+						field.className = "late-field";
+						field.textContent = `${key}: ${formatLateValue(key, item[key])}`;
+						left.appendChild(field);
+					});
+
+					const toggleRow = document.createElement("div");
+					toggleRow.className = "late-problem-toggle";
+
+					const toggleButton = document.createElement("button");
+					toggleButton.type = "button";
+					toggleButton.className = "late-toggle";
+					toggleButton.setAttribute("aria-expanded", "false");
+					toggleButton.setAttribute("aria-label", "展开/隐藏 problem");
+					const toggleLabel = document.createElement("span");
+					toggleLabel.textContent = "problem";
+
+					toggleRow.appendChild(toggleButton);
+					toggleRow.appendChild(toggleLabel);
+					right.appendChild(toggleRow);
+
+					const problemBox = document.createElement("div");
+					problemBox.className = "late-problem hidden";
+					const problem = item && item.problem ? item.problem : null;
+					if (!problem) {
+						const problemEmpty = document.createElement("div");
+						problemEmpty.textContent = "No problem data";
+						problemBox.appendChild(problemEmpty);
+					} else {
+						Object.keys(problem).forEach((key) => {
+							const field = document.createElement("div");
+							field.className = "late-field";
+							field.textContent = `${key}: ${formatLateValue(key, problem[key])}`;
+							problemBox.appendChild(field);
+						});
+					}
+
+					toggleButton.addEventListener("click", () => {
+						const isHidden = problemBox.classList.contains("hidden");
+						problemBox.classList.toggle("hidden", !isHidden);
+						toggleButton.classList.toggle("open", isHidden);
+						toggleButton.setAttribute("aria-expanded", String(isHidden));
+					});
+
+					right.appendChild(problemBox);
+					wrapper.appendChild(left);
+					wrapper.appendChild(right);
+					lateList.appendChild(wrapper);
+				});
+			}
+
+			function applyContestFilters(data) {
+				let filtered = data || [];
+				const query = contestSearch.value.trim().toLowerCase();
+				if (query) {
+					filtered = filtered.filter((contest) => {
+						if (!contest) {
+							return false;
+						}
+						const idText = contest.id != null ? String(contest.id) : "";
+						const nameText = contest.name ? String(contest.name) : "";
+						return idText.includes(query) || nameText.toLowerCase().includes(query);
+					});
+				}
+
+				const startValue = contestStartDate.value;
+				const endValue = contestEndDate.value;
+				if (startValue || endValue) {
+					const startMs = startValue ? new Date(`${startValue}T00:00:00`).getTime() : null;
+					const endMs = endValue ? new Date(`${endValue}T23:59:59`).getTime() : null;
+					filtered = filtered.filter((contest) => {
+						const startSeconds = contest && contest.startTimeSeconds;
+						if (startSeconds == null) {
+							return false;
+						}
+						const contestMs = Number(startSeconds) * 1000;
+						if (Number.isNaN(contestMs)) {
+							return false;
+						}
+						if (startMs != null && contestMs < startMs) {
+							return false;
+						}
+						if (endMs != null && contestMs > endMs) {
+							return false;
+						}
+						return true;
+					});
+				}
+
+				return filtered;
+			}
+
+			function groupContestsByPhase(items) {
+				const groups = new Map();
+				items.forEach((contest) => {
+					const phase = contest && contest.phase ? contest.phase : "UNKNOWN";
+					if (!groups.has(phase)) {
+						groups.set(phase, []);
+					}
+					groups.get(phase).push(contest);
+				});
+				return Array.from(groups.entries());
+			}
+
+			function renderContestList() {
+				const total = contestData.length;
+				const filtered = applyContestFilters(contestData);
+				const filteredTotal = filtered.length;
+				const totalPages = Math.max(1, Math.ceil(filteredTotal / CONTESTS_PER_PAGE));
+				contestPage = Math.min(contestPage, totalPages);
+				contestCount.textContent = `总条数: ${total}，筛选后: ${filteredTotal}`;
+				contestPageInfo.textContent = `Page ${contestPage} / ${totalPages}`;
+				contestPrev.disabled = contestPage <= 1;
+				contestNext.disabled = contestPage >= totalPages;
+				contestList.innerHTML = "";
+
+				if (filteredTotal === 0) {
+					const empty = document.createElement("div");
+					empty.className = "placeholder";
+					empty.textContent = "No data";
+					contestList.appendChild(empty);
+					return;
+				}
+
+				const start = (contestPage - 1) * CONTESTS_PER_PAGE;
+				const items = filtered.slice(start, start + CONTESTS_PER_PAGE);
+				const groups = groupContestsByPhase(items);
+
+				groups.forEach(([phase, groupItems]) => {
+					const group = document.createElement("div");
+					group.className = "contest-group";
+
+					const title = document.createElement("div");
+					title.className = "contest-group-title";
+					title.textContent = `阶段: ${phase}`;
+					group.appendChild(title);
+
+					groupItems.forEach((contest) => {
+						const wrapper = document.createElement("div");
+						wrapper.className = "contest-item";
+
+						Object.keys(contest || {}).forEach((key) => {
+							const field = document.createElement("div");
+							field.className = "contest-field";
+							field.textContent = `${key}: ${formatContestValue(key, contest[key])}`;
+							wrapper.appendChild(field);
+						});
+
+						group.appendChild(wrapper);
+					});
+
+					contestList.appendChild(group);
+				});
+			}
+
+			function renderRecordList() {
+				const total = recordData.length;
+				const filtered = applyRecordFilters(recordData);
+				const filteredTotal = filtered.length;
+				const totalPages = Math.max(1, Math.ceil(filteredTotal / RECORDS_PER_PAGE));
+				recordPage = Math.min(recordPage, totalPages);
+				recordCount.textContent = `总条数: ${total}，筛选后: ${filteredTotal}`;
+				recordPageInfo.textContent = `Page ${recordPage} / ${totalPages}`;
+				recordPrev.disabled = recordPage <= 1;
+				recordNext.disabled = recordPage >= totalPages;
+				recordList.innerHTML = "";
+
+				if (filteredTotal === 0) {
+					const empty = document.createElement("div");
+					empty.className = "placeholder";
+					empty.textContent = "No data";
+					recordList.appendChild(empty);
+					return;
+				}
+
+				const start = (recordPage - 1) * RECORDS_PER_PAGE;
+				const items = filtered.slice(start, start + RECORDS_PER_PAGE);
+
+				items.forEach((record) => {
+					const wrapper = document.createElement("div");
+					wrapper.className = "record-item";
+
+					Object.keys(record || {}).forEach((key) => {
+						if (key === "Submission" || key === "submission" || key === "submissions") {
+							return;
+						}
+						const field = document.createElement("div");
+						field.className = "record-field";
+						field.textContent = `${key}: ${formatRecordValue(key, record[key])}`;
+						wrapper.appendChild(field);
+					});
+
+					const diffField = document.createElement("div");
+					diffField.className = "record-field";
+					const hasRatings = record && record.newRating != null && record.oldRating != null;
+					const diffValue = hasRatings ? Number(record.newRating) - Number(record.oldRating) : null;
+					if (diffValue != null && !Number.isNaN(diffValue)) {
+						if (diffValue > 0) {
+							diffField.classList.add("diff-positive");
+						} else if (diffValue < 0) {
+							diffField.classList.add("diff-negative");
+						}
+						diffField.textContent = `diff: ${diffValue}`;
+					} else {
+						diffField.textContent = "diff: -";
+					}
+					wrapper.appendChild(diffField);
+
+					const actions = document.createElement("div");
+					actions.className = "record-actions";
+					const problemButton = document.createElement("button");
+					problemButton.type = "button";
+					problemButton.textContent = "展示题目信息";
+					const submissionButton = document.createElement("button");
+					submissionButton.type = "button";
+					submissionButton.textContent = "提交记录";
+					actions.appendChild(problemButton);
+					actions.appendChild(submissionButton);
+					wrapper.appendChild(actions);
+
+					const problemBox = document.createElement("div");
+					problemBox.className = "record-problems hidden";
+					const submissions = getRecordSubmissions(record);
+					const problems = getUniqueProblems(Array.isArray(submissions) ? submissions : []);
+					if (problems.length === 0) {
+						const empty = document.createElement("div");
+						empty.textContent = "No problem data";
+						problemBox.appendChild(empty);
+					} else {
+						problems.forEach(({ index, problem }) => {
+							const problemWrapper = document.createElement("div");
+							problemWrapper.className = "record-problem";
+							const title = document.createElement("div");
+							title.textContent = `Problem ${index}`;
+							problemWrapper.appendChild(title);
+							Object.keys(problem || {}).forEach((key) => {
+								const field = document.createElement("div");
+								field.className = "record-field";
+								field.textContent = `${key}: ${formatRecordValue(key, problem[key])}`;
+								problemWrapper.appendChild(field);
+							});
+							problemBox.appendChild(problemWrapper);
+						});
+					}
+					wrapper.appendChild(problemBox);
+
+					problemButton.addEventListener("click", () => {
+						const isHidden = problemBox.classList.contains("hidden");
+						problemBox.classList.toggle("hidden", !isHidden);
+						problemButton.textContent = isHidden ? "隐藏题目信息" : "展示题目信息";
+					});
+
+					submissionButton.addEventListener("click", () => {
+						openSubmissionModal(submissions, record);
+					});
+
+					recordList.appendChild(wrapper);
+				});
+			}
+
+			function openSubmissionModal(submissions, record) {
+				currentSubmissions = Array.isArray(submissions) ? submissions : [];
+				submissionTitle.textContent = record && record.contestName
+					? `提交记录 - ${record.contestName}`
+					: "提交记录";
+				submissionFilter.innerHTML = "";
+				const optionAll = document.createElement("option");
+				optionAll.value = "all";
+				optionAll.textContent = "全部";
+				submissionFilter.appendChild(optionAll);
+
+				const indexSet = new Set();
+				currentSubmissions.forEach((submission) => {
+					const index = submission && submission.problem && submission.problem.index;
+					if (index) {
+						indexSet.add(index);
+					}
+				});
+				Array.from(indexSet).sort().forEach((index) => {
+					const option = document.createElement("option");
+					option.value = index;
+					option.textContent = index;
+					submissionFilter.appendChild(option);
+				});
+
+				submissionFilter.value = "all";
+				renderSubmissionList();
+				submissionModal.classList.remove("hidden");
+			}
+
+			function closeSubmissionModal() {
+				submissionModal.classList.add("hidden");
+			}
+
+			function renderSubmissionList() {
+				const selected = submissionFilter.value;
+				const filtered = selected === "all"
+					? currentSubmissions
+					: currentSubmissions.filter((submission) => {
+						const index = submission && submission.problem && submission.problem.index;
+						return index === selected;
+					});
+
+				submissionList.innerHTML = "";
+				if (filtered.length === 0) {
+					const empty = document.createElement("div");
+					empty.className = "placeholder";
+					empty.textContent = "No data";
+					submissionList.appendChild(empty);
+					return;
+				}
+
+				filtered.forEach((submission) => {
+					const wrapper = document.createElement("div");
+					wrapper.className = "submission-item";
+					const problemIndex = submission && submission.problem && submission.problem.index
+						? submission.problem.index
+						: "-";
+					const indexField = document.createElement("div");
+					indexField.className = "submission-field";
+					indexField.textContent = `problemIndex: ${problemIndex}`;
+					wrapper.appendChild(indexField);
+
+					Object.keys(submission || {}).forEach((key) => {
+						if (key === "onTime" || key === "problem") {
+							return;
+						}
+						const field = document.createElement("div");
+						field.className = "submission-field";
+						field.textContent = `${key}: ${formatSubmissionValue(key, submission[key])}`;
+						wrapper.appendChild(field);
+					});
+
+					submissionList.appendChild(wrapper);
+				});
+			}
+
+			async function loadUsers() {
+				statusMessage.textContent = "";
+				try {
+					const data = await getUsersList();
+					const users = normalizeUsers(data);
+					userSelect.innerHTML = "";
+
+					if (users.length === 0) {
+						const option = document.createElement("option");
+						option.value = "";
+						option.textContent = "No users";
+						userSelect.appendChild(option);
+						statusMessage.textContent = "No users available.";
+						renderUserInfo(null);
+						return;
+					}
+
+					users.forEach((handle) => {
+						const option = document.createElement("option");
+						option.value = handle;
+						option.textContent = handle;
+						userSelect.appendChild(option);
+					});
+
+					userSelect.value = users[0];
+					await loadUserInfo(users[0]);
+					await loadContestList(users[0]);
+					await loadLateSubmissions(users[0]);
+					await loadContestRecord(users[0]);
+				} catch (error) {
+					userSelect.innerHTML = "";
+					const option = document.createElement("option");
+					option.value = "";
+					option.textContent = "Load failed";
+					userSelect.appendChild(option);
+					statusMessage.textContent = "Failed to load user list.";
+					renderUserInfo(null);
+					contestData = [];
+					contestPage = 1;
+					renderContestList();
+					lateData = [];
+					renderLateList();
+					recordData = [];
+					recordPage = 1;
+					renderRecordList();
+				}
+			}
+
+			async function loadUserInfo(handle) {
+				if (!handle) {
+					renderUserInfo(null);
+					return;
+				}
+
+				statusMessage.textContent = "";
+				try {
+					const info = await getUserInfo(handle);
+					renderUserInfo(normalizeUserInfo(info));
+				} catch (error) {
+					statusMessage.textContent = "Failed to load user info.";
+					renderUserInfo(null);
+				}
+			}
+
+			async function loadContestList(handle) {
+				contestStatus.textContent = "";
+				contestData = [];
+				contestPage = 1;
+				renderContestList();
+
+				if (!handle) {
+					return;
+				}
+
+				try {
+					const data = await getContestList(handle);
+					contestData = normalizeContestList(data);
+					contestPage = 1;
+					renderContestList();
+				} catch (error) {
+					contestStatus.textContent = "Failed to load contest list.";
+					contestData = [];
+					contestPage = 1;
+					renderContestList();
+				}
+			}
+
+			async function loadLateSubmissions(handle) {
+				lateStatus.textContent = "";
+				lateData = [];
+				renderLateList();
+
+				if (!handle) {
+					return;
+				}
+
+				try {
+					const data = await getLateSubmissions(handle);
+					lateData = normalizeLateList(data);
+					renderLateList();
+				} catch (error) {
+					lateStatus.textContent = "Failed to load late submissions.";
+					lateData = [];
+					renderLateList();
+				}
+			}
+
+			async function loadContestRecord(handle) {
+				recordStatus.textContent = "";
+				recordData = [];
+				recordPage = 1;
+				renderRecordList();
+
+				if (!handle) {
+					return;
+				}
+
+				try {
+					const data = await getContestRecord(handle);
+					recordData = normalizeContestRecordList(data);
+					recordPage = 1;
+					renderRecordList();
+				} catch (error) {
+					recordStatus.textContent = "Failed to load contest records.";
+					recordData = [];
+					recordPage = 1;
+					renderRecordList();
+				}
+			}
+
+			pageButtons.forEach((button) => {
+				button.addEventListener("click", () => setActivePage(button.dataset.page));
+			});
+
+			userSelect.addEventListener("change", (event) => {
+				const handle = event.target.value;
+				loadUserInfo(handle);
+				loadContestList(handle);
+				loadLateSubmissions(handle);
+				loadContestRecord(handle);
+			});
+
+			recordToggle.addEventListener("click", () => {
+				const isHidden = recordSection.classList.contains("hidden");
+				recordSection.classList.toggle("hidden", !isHidden);
+				recordToggle.textContent = isHidden ? "隐藏竞赛记录" : "竞赛记录";
+			});
+
+			recordNav.addEventListener("click", () => {
+				setActivePage("home");
+				recordSection.classList.remove("hidden");
+				recordToggle.textContent = "隐藏竞赛记录";
+			});
+
+			function handleContestFilterChange() {
+				contestPage = 1;
+				renderContestList();
+			}
+
+			contestSearch.addEventListener("input", handleContestFilterChange);
+			contestStartDate.addEventListener("change", handleContestFilterChange);
+			contestEndDate.addEventListener("change", handleContestFilterChange);
+			contestReset.addEventListener("click", () => {
+				contestSearch.value = "";
+				contestStartDate.value = "";
+				contestEndDate.value = "";
+				handleContestFilterChange();
+			});
+
+			function handleLateFilterChange() {
+				renderLateList();
+			}
+
+			lateSearch.addEventListener("input", handleLateFilterChange);
+			lateStartDate.addEventListener("change", handleLateFilterChange);
+			lateEndDate.addEventListener("change", handleLateFilterChange);
+			lateReset.addEventListener("click", () => {
+				lateSearch.value = "";
+				lateStartDate.value = "";
+				lateEndDate.value = "";
+				handleLateFilterChange();
+			});
+
+			contestPrev.addEventListener("click", () => {
+				if (contestPage > 1) {
+					contestPage -= 1;
+					renderContestList();
+				}
+			});
+
+			contestNext.addEventListener("click", () => {
+				const filteredTotal = applyContestFilters(contestData).length;
+				const totalPages = Math.max(1, Math.ceil(filteredTotal / CONTESTS_PER_PAGE));
+				if (contestPage < totalPages) {
+					contestPage += 1;
+					renderContestList();
+				}
+			});
+
+			recordPrev.addEventListener("click", () => {
+				if (recordPage > 1) {
+					recordPage -= 1;
+					renderRecordList();
+				}
+			});
+
+			recordNext.addEventListener("click", () => {
+				const filteredTotal = applyRecordFilters(recordData).length;
+				const totalPages = Math.max(1, Math.ceil(filteredTotal / RECORDS_PER_PAGE));
+				if (recordPage < totalPages) {
+					recordPage += 1;
+					renderRecordList();
+				}
+			});
+
+			function handleRecordFilterChange() {
+				recordPage = 1;
+				renderRecordList();
+			}
+
+			recordSearch.addEventListener("input", handleRecordFilterChange);
+			recordStartDate.addEventListener("change", handleRecordFilterChange);
+			recordEndDate.addEventListener("change", handleRecordFilterChange);
+			recordReset.addEventListener("click", () => {
+				recordSearch.value = "";
+				recordStartDate.value = "";
+				recordEndDate.value = "";
+				handleRecordFilterChange();
+			});
+
+			submissionClose.addEventListener("click", closeSubmissionModal);
+			submissionFilter.addEventListener("change", renderSubmissionList);
+			submissionModal.addEventListener("click", (event) => {
+				if (event.target === submissionModal) {
+					closeSubmissionModal();
+				}
+			});
+
+			loadUsers();
+		</script>
+	</body>
+</html>
