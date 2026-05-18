@@ -15,6 +15,7 @@
 				<button type="button" id="recordNav">竞赛提交记录</button>
 				<button type="button" data-page="contests">竞赛列表</button>
 				<button type="button" data-page="late">非竞赛提交列表</button>
+				<button type="button" data-page="chart">分数折线图</button>
 			</nav>
 			<main class="content">
 				<div class="topbar">
@@ -123,6 +124,19 @@
 					<div id="lateList" class="late-list"></div>
 					<div id="lateStatus" class="status"></div>
 				</section>
+
+				<section id="page-chart" class="page">
+					<h2><span id="chartUsername"></span>的分数走势图</h2>
+					<div class="chart-filters">
+						<label for="chartStartDate">开始日期</label>
+						<input id="chartStartDate" type="date">
+						<label for="chartEndDate">截止日期</label>
+						<input id="chartEndDate" type="date">
+						<button type="button" id="chartReset">重置</button>
+					</div>
+					<div id="chartContainer" class="chart-container"></div>
+					<div id="chartStatus" class="status"></div>
+				</section>
 			</main>
 		</div>
 
@@ -147,7 +161,8 @@
 			const pages = {
 				home: document.getElementById("page-home"),
 				contests: document.getElementById("page-contests"),
-				late: document.getElementById("page-late")
+				late: document.getElementById("page-late"),
+				chart: document.getElementById("page-chart")
 			};
 
 			const userSelect = document.getElementById("userSelect");
@@ -181,6 +196,11 @@
 			const lateTypeFilter = document.getElementById("lateTypeFilter");
 			const lateList = document.getElementById("lateList");
 			const lateStatus = document.getElementById("lateStatus");
+			const chartStartDate = document.getElementById("chartStartDate");
+			const chartEndDate = document.getElementById("chartEndDate");
+			const chartReset = document.getElementById("chartReset");
+			const chartContainer = document.getElementById("chartContainer");
+			const chartStatus = document.getElementById("chartStatus");
 			const recordNav = document.getElementById("recordNav");
 			const recordSection = document.getElementById("recordSection");
 			const recordCount = document.getElementById("recordCount");
@@ -209,6 +229,7 @@
 			let recordData = [];
 			let recordPage = 1;
 			let currentSubmissions = [];
+			let ratingChart = null;
 			const PARTICIPATE_TYPE_LABELS = [
 				"CONTESTANT",
 				"PRACTICE",
@@ -232,6 +253,10 @@
 						button.removeAttribute("aria-current");
 					}
 				});
+
+				if (pageKey === "chart") {
+					renderRatingChart();
+				}
 			}
 
 			function getKeyInChinese(key){
@@ -713,6 +738,104 @@
 				return filtered;
 			}
 
+			function applyChartFilters(data) {
+				let filtered = data || [];
+				const startValue = chartStartDate.value;
+				const endValue = chartEndDate.value;
+				if (startValue || endValue) {
+					let startMs = startValue ? new Date(`${startValue}T00:00:00`).getTime() : null;
+					let endMs = endValue ? new Date(`${endValue}T23:59:59`).getTime() : null;
+					if (startMs != null && endMs != null && startMs > endMs) {
+						const swap = startMs;
+						startMs = endMs;
+						endMs = swap;
+					}
+					filtered = filtered.filter((record) => {
+						const timeSeconds = record && record.ratingUpdateTimeSeconds;
+						if (timeSeconds == null) {
+							return false;
+						}
+						const recordMs = Number(timeSeconds) * 1000;
+						if (Number.isNaN(recordMs)) {
+							return false;
+						}
+						if (startMs != null && recordMs < startMs) {
+							return false;
+						}
+						if (endMs != null && recordMs > endMs) {
+							return false;
+						}
+						return true;
+					});
+				}
+
+				return filtered;
+			}
+
+			function buildRatingSeries(records) {
+				return (records || [])
+					.map((record) => {
+						const timeSeconds = record && record.ratingUpdateTimeSeconds;
+						const ratingValue = record && record.newRating;
+						if (timeSeconds == null || ratingValue == null) {
+							return null;
+						}
+						const recordMs = Number(timeSeconds) * 1000;
+						const rating = Number(ratingValue);
+						if (Number.isNaN(recordMs) || Number.isNaN(rating)) {
+							return null;
+						}
+						return { timeMs: recordMs, rating };
+					})
+					.filter(Boolean)
+					.sort((a, b) => a.timeMs - b.timeMs);
+			}
+
+			function renderRatingChart() {
+				if (!chartContainer) {
+					return;
+				}
+				if (!ratingChart) {
+					ratingChart = echarts.init(chartContainer);
+				}
+				const filtered = applyChartFilters(recordData);
+				const points = buildRatingSeries(filtered);
+				if (points.length === 0) {
+					chartStatus.textContent = "No data";
+					ratingChart.clear();
+					return;
+				}
+				chartStatus.textContent = "";
+				const titleWithUsername = userSelect.value+"的分数变化"
+				const seriesData = points.map((point) => {
+					const pointColor = colorUsernameByRating(point.rating) || "red";
+					return {
+						value: [point.timeMs, point.rating],
+						itemStyle: { color: pointColor }
+					};
+				});
+				const option = {
+					title: { text: titleWithUsername },
+					tooltip: { trigger: "axis" },
+					xAxis: { type: "time" },
+					yAxis: { type: "value" },
+					grid: { left: 40, right: 20, top: 50, bottom: 40, containLabel: true },
+					series: [
+						{
+							type: "line",
+							data: seriesData,
+							smooth: true,
+							showSymbol: true,
+							symbolSize: 6,
+							lineStyle: { width: 2 }
+						}
+					]
+				};
+				document.getElementById("chartUsername").textContent = userSelect.value
+				ratingChart.setOption(option);
+				ratingChart.resize();
+			}
+
 			function renderLateList() {
 				const total = lateData.length;
 				const filtered = applyLateFilters(lateData);
@@ -1134,6 +1257,7 @@
 					recordData = [];
 					recordPage = 1;
 					renderRecordList();
+					renderRatingChart();
 				}
 			}
 
@@ -1204,6 +1328,7 @@
 				recordData = [];
 				recordPage = 1;
 				renderRecordList();
+				renderRatingChart();
 
 				if (!handle) {
 					return;
@@ -1214,11 +1339,13 @@
 					recordData = normalizeContestRecordList(data);
 					recordPage = 1;
 					renderRecordList();
+					renderRatingChart();
 				} catch (error) {
 					recordStatus.textContent = "Failed to load contest records.";
 					recordData = [];
 					recordPage = 1;
 					renderRecordList();
+					renderRatingChart();
 				}
 			}
 
@@ -1336,11 +1463,29 @@
 				handleRecordFilterChange();
 			});
 
+			function handleChartFilterChange() {
+				renderRatingChart();
+			}
+
+			chartStartDate.addEventListener("change", handleChartFilterChange);
+			chartEndDate.addEventListener("change", handleChartFilterChange);
+			chartReset.addEventListener("click", () => {
+				chartStartDate.value = "";
+				chartEndDate.value = "";
+				handleChartFilterChange();
+			});
+
 			submissionClose.addEventListener("click", closeSubmissionModal);
 			submissionFilter.addEventListener("change", renderSubmissionList);
 			submissionModal.addEventListener("click", (event) => {
 				if (event.target === submissionModal) {
 					closeSubmissionModal();
+				}
+			});
+
+			window.addEventListener("resize", () => {
+				if (ratingChart) {
+					ratingChart.resize();
 				}
 			});
 

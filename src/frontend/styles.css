@@ -166,6 +166,25 @@ body {
 	padding: 2px 4px;
 }
 
+.chart-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.chart-filters input {
+	padding: 2px 4px;
+}
+
+.chart-container {
+	width: 100%;
+	height: 420px;
+	border: 1px solid #ddd;
+	background: #fff;
+}
+
 .late-list {
 	display: flex;
 	flex-direction: column;
