@@ -14,7 +14,7 @@
 				<button type="button" data-page="home" aria-current="page">主页</button>
 				<button type="button" id="recordNav">竞赛提交记录</button>
 				<button type="button" data-page="contests">竞赛列表</button>
-				<button type="button" data-page="late">非竞赛提交列表</button>
+				<button type="button" data-page="late">补题记录</button>
 				<button type="button" data-page="chart">分数折线图</button>
 			</nav>
 			<main class="content">
@@ -87,7 +87,7 @@
 				</section>
 
 				<section id="page-late" class="page">
-					<h2>补交列表</h2>
+					<h2>补题列表</h2>
 					<div class="late-toolbar">
 						<div id="lateCount">总条数: -</div>
 						<div class="pagination">
@@ -103,12 +103,6 @@
 						<input id="lateStartDate" type="date">
 						<label for="lateEndDate">截止日期</label>
 						<input id="lateEndDate" type="date">
-						<label for="lateOnTimeFilter">显示范围</label>
-						<select id="lateOnTimeFilter">
-							<option value="all">全部</option>
-							<option value="late">迟交</option>
-							<option value="non-late">非迟交</option>
-						</select>
 						<label for="lateTypeFilter">参赛类型</label>
 						<select id="lateTypeFilter">
 							<option value="all">全部</option>
@@ -192,7 +186,6 @@
 			const lateSearch = document.getElementById("lateSearch");
 			const lateStartDate = document.getElementById("lateStartDate");
 			const lateEndDate = document.getElementById("lateEndDate");
-			const lateOnTimeFilter = document.getElementById("lateOnTimeFilter");
 			const lateTypeFilter = document.getElementById("lateTypeFilter");
 			const lateList = document.getElementById("lateList");
 			const lateStatus = document.getElementById("lateStatus");
@@ -533,9 +526,6 @@
 			}
 
 			function formatLateValue(key, value) {
-				if (key === "onTime") {
-					return mapOnTime(value);
-				}
 				if (key === "creationTimeSeconds") {
 					return formatDate(value);
 				}
@@ -549,23 +539,6 @@
 					return "-";
 				}
 				return String(value);
-			}
-
-			function mapOnTime(value) {
-				const numeric = Number(value);
-				if (Number.isNaN(numeric)) {
-					return "-";
-				}
-				if (numeric === -1) {
-					return "迟交";
-				}
-				if (numeric === 0) {
-					return "迟交";
-				}
-				if (numeric === 1) {
-					return "非迟交";
-				}
-				return String(numeric);
 			}
 
 			function mapParticipateType(value) {
@@ -627,7 +600,6 @@
 
 			function applyLateFilters(data) {
 				let filtered = data || [];
-				const onTimeFilter = lateOnTimeFilter.value;
 				const typeFilter = lateTypeFilter.value;
 				const query = lateSearch.value.trim().toLowerCase();
 				if (query) {
@@ -647,19 +619,6 @@
 							langText.toLowerCase().includes(query) ||
 							problemName.toLowerCase().includes(query)
 						);
-					});
-				}
-
-				if (onTimeFilter !== "all") {
-					filtered = filtered.filter((item) => {
-						const value = Number(item && item.onTime);
-						if (Number.isNaN(value)) {
-							return false;
-						}
-						if (onTimeFilter === "late") {
-							return value === -1;
-						}
-						return value !== -1;
 					});
 				}
 
@@ -801,7 +760,7 @@
 				const filtered = applyChartFilters(recordData);
 				const points = buildRatingSeries(filtered);
 				if (points.length === 0) {
-					chartStatus.textContent = "No data";
+					chartStatus.textContent = "无数据！用户在指定时间段内未参加过rated比赛";
 					ratingChart.clear();
 					return;
 				}
@@ -870,7 +829,7 @@
 					right.className = "late-right";
 
 					Object.keys(item || {}).forEach((key) => {
-						if (key === "problem") {
+						if (key === "problem" || key === "onTime") {
 							return;
 						}
 						const field = document.createElement("div");
@@ -1389,13 +1348,11 @@
 			lateSearch.addEventListener("input", handleLateFilterChange);
 			lateStartDate.addEventListener("change", handleLateFilterChange);
 			lateEndDate.addEventListener("change", handleLateFilterChange);
-			lateOnTimeFilter.addEventListener("change", handleLateFilterChange);
 			lateTypeFilter.addEventListener("change", handleLateFilterChange);
 			lateReset.addEventListener("click", () => {
 				lateSearch.value = "";
 				lateStartDate.value = "";
 				lateEndDate.value = "";
-				lateOnTimeFilter.value = "all";
 				lateTypeFilter.value = "all";
 				handleLateFilterChange();
 			});
