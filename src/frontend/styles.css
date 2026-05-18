@@ -1,0 +1,323 @@
+body {
+	margin: 0;
+	font-family: Arial, sans-serif;
+}
+
+.layout {
+	display: flex;
+	min-height: 100vh;
+}
+
+.sidebar {
+	width: 180px;
+	border-right: 1px solid #ddd;
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.sidebar button {
+	text-align: left;
+}
+
+.content {
+	flex: 1;
+	padding: 16px;
+}
+
+.topbar {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.page {
+	display: none;
+}
+
+.page.active {
+	display: block;
+}
+
+.hidden {
+	display: none;
+}
+
+.user-card {
+	display: flex;
+	gap: 12px;
+	align-items: flex-start;
+}
+
+.user-card img {
+	width: 80px;
+	height: 80px;
+	object-fit: cover;
+	border: 1px solid #ddd;
+	background: #f2f2f2;
+}
+
+.record-header {
+	margin-top: 16px;
+}
+
+.record-section {
+	margin-top: 12px;
+}
+
+.record-toolbar {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.record-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.record-filters input {
+	padding: 2px 4px;
+}
+
+.record-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.record-item {
+	border: 1px solid #ddd;
+	padding: 8px;
+}
+
+.record-field {
+	margin: 2px 0;
+}
+
+.diff-positive {
+	color: #0a7a0a;
+}
+
+.diff-negative {
+	color: #b00020;
+}
+
+.record-actions {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-top: 6px;
+}
+
+.record-problems {
+	margin-top: 6px;
+	padding-left: 12px;
+}
+
+.record-problem {
+	border: 1px dashed #ccc;
+	padding: 6px;
+	margin-bottom: 6px;
+}
+
+.contest-toolbar {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.contest-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.contest-filters input {
+	padding: 2px 4px;
+}
+
+.late-toolbar {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.late-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.late-filters input {
+	padding: 2px 4px;
+}
+
+.late-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.late-item {
+	display: flex;
+	gap: 16px;
+	border: 1px solid #ddd;
+	padding: 8px;
+	align-items: flex-start;
+}
+
+.late-left {
+	flex: 1;
+	min-width: 0;
+}
+
+.late-right {
+	min-width: 200px;
+	max-width: 320px;
+}
+
+.late-field {
+	margin: 2px 0;
+}
+
+.late-problem-toggle {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	margin-top: 6px;
+}
+
+.late-toggle {
+	width: 12px;
+	height: 12px;
+	border: 1px solid #333;
+	background: #fff;
+	padding: 0;
+	cursor: pointer;
+}
+
+.late-toggle.open {
+	background: #333;
+}
+
+.late-problem {
+	margin-top: 6px;
+}
+
+.late-problem.hidden {
+	display: none;
+}
+
+.modal {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+.modal.hidden {
+	display: none;
+}
+
+.modal-content {
+	background: #fff;
+	width: min(800px, 92vw);
+	max-height: 80vh;
+	overflow: auto;
+	padding: 12px;
+	border-radius: 4px;
+}
+
+.modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.modal-controls {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.submission-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.submission-item {
+	border: 1px solid #ddd;
+	padding: 6px;
+}
+
+.submission-field {
+	margin: 2px 0;
+}
+
+.pagination {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.contest-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.contest-item {
+	border: 1px solid #ddd;
+	padding: 8px;
+}
+
+.contest-group {
+	border: 1px dashed #ccc;
+	padding: 8px;
+}
+
+.contest-group-title {
+	font-weight: bold;
+	margin-bottom: 6px;
+}
+
+.contest-field {
+	margin: 2px 0;
+}
+
+.fields {
+	margin-top: 8px;
+}
+
+.field {
+	margin: 4px 0;
+}
+
+.placeholder {
+	color: #666;
+}
+
+.status {
+	color: #b00;
+	margin-top: 8px;
+}

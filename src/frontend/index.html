@@ -3,344 +3,22 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Codeforces Crawl</title>
-		<style>
-			body {
-				margin: 0;
-				font-family: Arial, sans-serif;
-			}
-
-			.layout {
-				display: flex;
-				min-height: 100vh;
-			}
-
-			.sidebar {
-				width: 180px;
-				border-right: 1px solid #ddd;
-				padding: 12px;
-				display: flex;
-				flex-direction: column;
-				gap: 8px;
-			}
-
-			.sidebar button {
-				text-align: left;
-			}
-
-			.content {
-				flex: 1;
-				padding: 16px;
-			}
-
-			.topbar {
-				display: flex;
-				justify-content: flex-end;
-				align-items: center;
-				gap: 8px;
-				margin-bottom: 12px;
-			}
-
-			.page {
-				display: none;
-			}
-
-			.page.active {
-				display: block;
-			}
-
-			.hidden {
-				display: none;
-			}
-
-			.user-card {
-				display: flex;
-				gap: 12px;
-				align-items: flex-start;
-			}
-
-			.user-card img {
-				width: 80px;
-				height: 80px;
-				object-fit: cover;
-				border: 1px solid #ddd;
-				background: #f2f2f2;
-			}
-
-			.record-header {
-				margin-top: 16px;
-			}
-
-			.record-section {
-				margin-top: 12px;
-			}
-
-			.record-toolbar {
-				display: flex;
-				gap: 12px;
-				align-items: center;
-				margin-bottom: 10px;
-			}
-
-			.record-filters {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 8px;
-				align-items: center;
-				margin-bottom: 10px;
-			}
-
-			.record-filters input {
-				padding: 2px 4px;
-			}
-
-			.record-list {
-				display: flex;
-				flex-direction: column;
-				gap: 10px;
-			}
-
-			.record-item {
-				border: 1px solid #ddd;
-				padding: 8px;
-			}
-
-			.record-field {
-				margin: 2px 0;
-			}
-
-			.diff-positive {
-				color: #0a7a0a;
-			}
-
-			.diff-negative {
-				color: #b00020;
-			}
-
-			.record-actions {
-				display: flex;
-				gap: 8px;
-				align-items: center;
-				margin-top: 6px;
-			}
-
-			.record-problems {
-				margin-top: 6px;
-				padding-left: 12px;
-			}
-
-			.record-problem {
-				border: 1px dashed #ccc;
-				padding: 6px;
-				margin-bottom: 6px;
-			}
-
-			.contest-toolbar {
-				display: flex;
-				gap: 12px;
-				align-items: center;
-				margin-bottom: 10px;
-			}
-
-			.contest-filters {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 8px;
-				align-items: center;
-				margin-bottom: 10px;
-			}
-
-			.contest-filters input {
-				padding: 2px 4px;
-			}
-
-			.late-toolbar {
-				display: flex;
-				gap: 12px;
-				align-items: center;
-				margin-bottom: 10px;
-			}
-
-			.late-filters {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 8px;
-				align-items: center;
-				margin-bottom: 10px;
-			}
-
-			.late-filters input {
-				padding: 2px 4px;
-			}
-
-			.late-list {
-				display: flex;
-				flex-direction: column;
-				gap: 10px;
-			}
-
-			.late-item {
-				display: flex;
-				gap: 16px;
-				border: 1px solid #ddd;
-				padding: 8px;
-				align-items: flex-start;
-			}
-
-			.late-left {
-				flex: 1;
-				min-width: 0;
-			}
-
-			.late-right {
-				min-width: 200px;
-				max-width: 320px;
-			}
-
-			.late-field {
-				margin: 2px 0;
-			}
-
-			.late-problem-toggle {
-				display: flex;
-				gap: 6px;
-				align-items: center;
-				margin-top: 6px;
-			}
-
-			.late-toggle {
-				width: 12px;
-				height: 12px;
-				border: 1px solid #333;
-				background: #fff;
-				padding: 0;
-				cursor: pointer;
-			}
-
-			.late-toggle.open {
-				background: #333;
-			}
-
-			.late-problem {
-				margin-top: 6px;
-			}
-
-			.late-problem.hidden {
-				display: none;
-			}
-
-			.modal {
-				position: fixed;
-				inset: 0;
-				background: rgba(0, 0, 0, 0.5);
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				z-index: 1000;
-			}
-
-			.modal.hidden {
-				display: none;
-			}
-
-			.modal-content {
-				background: #fff;
-				width: min(800px, 92vw);
-				max-height: 80vh;
-				overflow: auto;
-				padding: 12px;
-				border-radius: 4px;
-			}
-
-			.modal-header {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				margin-bottom: 8px;
-			}
-
-			.modal-controls {
-				display: flex;
-				gap: 8px;
-				align-items: center;
-				margin-bottom: 8px;
-			}
-
-			.submission-list {
-				display: flex;
-				flex-direction: column;
-				gap: 8px;
-			}
-
-			.submission-item {
-				border: 1px solid #ddd;
-				padding: 6px;
-			}
-
-			.submission-field {
-				margin: 2px 0;
-			}
-
-			.pagination {
-				display: flex;
-				gap: 8px;
-				align-items: center;
-			}
-
-			.contest-list {
-				display: flex;
-				flex-direction: column;
-				gap: 10px;
-			}
-
-			.contest-item {
-				border: 1px solid #ddd;
-				padding: 8px;
-			}
-
-			.contest-group {
-				border: 1px dashed #ccc;
-				padding: 8px;
-			}
-
-			.contest-group-title {
-				font-weight: bold;
-				margin-bottom: 6px;
-			}
-
-			.contest-field {
-				margin: 2px 0;
-			}
-
-			.fields {
-				margin-top: 8px;
-			}
-
-			.field {
-				margin: 4px 0;
-			}
-
-			.placeholder {
-				color: #666;
-			}
-
-			.status {
-				color: #b00;
-				margin-top: 8px;
-			}
-		</style>
+		<link rel="stylesheet" href="styles.css">
 		<script src="js/fetchData.js"></script>
+		<script src="js/decorate.js"></script>
+		<script src="js/echarts.js"></script>
 	</head>
 	<body>
 		<div class="layout">
 			<nav class="sidebar">
 				<button type="button" data-page="home" aria-current="page">主页</button>
-				<button type="button" id="recordNav">竞赛记录</button>
+				<button type="button" id="recordNav">竞赛提交记录</button>
 				<button type="button" data-page="contests">竞赛列表</button>
-				<button type="button" data-page="late">迟交列表</button>
+				<button type="button" data-page="late">非竞赛提交列表</button>
 			</nav>
 			<main class="content">
 				<div class="topbar">
-					<label for="userSelect">User</label>
+					<label for="userSelect">选择用户：</label>
 					<select id="userSelect">
 						<option value="">Loading...</option>
 					</select>
@@ -351,18 +29,16 @@
 					<div class="user-card">
 						<img id="userAvatar" alt="avatar" src="">
 						<div class="fields">
-							<div class="field">Handle: <span id="userHandle">-</span></div>
-							<div class="field">Rank: <span id="userRank">-</span></div>
-							<div class="field">Max rating: <span id="userMaxRating">-</span></div>
-							<div class="field">Max rank: <span id="userMaxRank">-</span></div>
-							<div class="field">Max rating (180 days): <span id="userMaxRating180">-</span></div>
-							<div class="field">Contests (180 days): <span id="userContests180">-</span></div>
+							<div class="field">用户名: <span id="userHandle">-</span></div>
+							<div class="field">段位(rank): <span id="userRank">-</span></div>
+							<div class="field">当前Rating: <span id="userRating">-</span></div>
+							<div class="field">最高Rating: <span id="userMaxRating">-</span></div>
+							<div class="field">最高段位: <span id="userMaxRank">-</span></div>
+							<div class="field">180天最高段位: <span id="userMaxRating180">-</span></div>
+							<div class="field">180天内比赛场数: <span id="userContests180">-</span></div>
 						</div>
 					</div>
 					<div id="statusMessage" class="status"></div>
-					<div class="record-header">
-						<button type="button" id="recordToggle">竞赛记录</button>
-					</div>
 					<div id="recordSection" class="record-section hidden">
 						<div class="record-toolbar">
 							<div id="recordCount">总条数: -</div>
@@ -410,9 +86,14 @@
 				</section>
 
 				<section id="page-late" class="page">
-					<h2>&#36831;&#20132;&#21015;&#34920;</h2>
+					<h2>补交列表</h2>
 					<div class="late-toolbar">
 						<div id="lateCount">总条数: -</div>
+						<div class="pagination">
+							<button type="button" id="latePrev">Prev</button>
+							<span id="latePageInfo">Page 1 / 1</span>
+							<button type="button" id="lateNext">Next</button>
+						</div>
 					</div>
 					<div class="late-filters">
 						<label for="lateSearch">搜索</label>
@@ -421,6 +102,22 @@
 						<input id="lateStartDate" type="date">
 						<label for="lateEndDate">截止日期</label>
 						<input id="lateEndDate" type="date">
+						<label for="lateOnTimeFilter">显示范围</label>
+						<select id="lateOnTimeFilter">
+							<option value="all">全部</option>
+							<option value="late">迟交</option>
+							<option value="non-late">非迟交</option>
+						</select>
+						<label for="lateTypeFilter">参赛类型</label>
+						<select id="lateTypeFilter">
+							<option value="all">全部</option>
+							<option value="CONTESTANT">CONTESTANT</option>
+							<option value="PRACTICE">PRACTICE</option>
+							<option value="VIRTUAL">VIRTUAL</option>
+							<option value="MANAGER">MANAGER</option>
+							<option value="OUT_OF_COMPETITION">OUT_OF_COMPETITION</option>
+							<option value="UNKNOWN">UNKNOWN</option>
+						</select>
 						<button type="button" id="lateReset">重置</button>
 					</div>
 					<div id="lateList" class="late-list"></div>
@@ -458,6 +155,7 @@
 			const userAvatar = document.getElementById("userAvatar");
 			const userHandle = document.getElementById("userHandle");
 			const userRank = document.getElementById("userRank");
+			const userRating = document.getElementById("userRating");
 			const userMaxRating = document.getElementById("userMaxRating");
 			const userMaxRank = document.getElementById("userMaxRank");
 			const userMaxRating180 = document.getElementById("userMaxRating180");
@@ -473,12 +171,16 @@
 			const contestEndDate = document.getElementById("contestEndDate");
 			const contestReset = document.getElementById("contestReset");
 			const lateCount = document.getElementById("lateCount");
+			const latePrev = document.getElementById("latePrev");
+			const lateNext = document.getElementById("lateNext");
+			const latePageInfo = document.getElementById("latePageInfo");
 			const lateSearch = document.getElementById("lateSearch");
 			const lateStartDate = document.getElementById("lateStartDate");
 			const lateEndDate = document.getElementById("lateEndDate");
+			const lateOnTimeFilter = document.getElementById("lateOnTimeFilter");
+			const lateTypeFilter = document.getElementById("lateTypeFilter");
 			const lateList = document.getElementById("lateList");
 			const lateStatus = document.getElementById("lateStatus");
-			const recordToggle = document.getElementById("recordToggle");
 			const recordNav = document.getElementById("recordNav");
 			const recordSection = document.getElementById("recordSection");
 			const recordCount = document.getElementById("recordCount");
@@ -498,13 +200,23 @@
 			const submissionTitle = document.getElementById("submissionTitle");
 			const lateReset = document.getElementById("lateReset");
 			const CONTESTS_PER_PAGE = 20;
+			const LATE_PER_PAGE = 20;
 			const RECORDS_PER_PAGE = 10;
 			let contestData = [];
 			let contestPage = 1;
 			let lateData = [];
+			let latePage = 1;
 			let recordData = [];
 			let recordPage = 1;
 			let currentSubmissions = [];
+			const PARTICIPATE_TYPE_LABELS = [
+				"CONTESTANT",
+				"PRACTICE",
+				"VIRTUAL",
+				"MANAGER",
+				"OUT_OF_COMPETITION",
+				"UNKNOWN"
+			];
 
 			function setActivePage(pageKey) {
 				Object.keys(pages).forEach((key) => {
@@ -520,6 +232,66 @@
 						button.removeAttribute("aria-current");
 					}
 				});
+			}
+
+			function getKeyInChinese(key){
+				if (key === "contestId"){
+					return "比赛id(contestId)"
+				}
+				if (key === "type"){
+					return "比赛类型"
+				}
+				if (key === "phase"){
+					return "比赛阶段(phase)"
+				}
+				if (key === "frozen"){
+					return "比赛结束状态(frozen)"
+				}
+				if (key === "durationSeconds"){
+					return "比赛持续时间"
+				}
+				if (key === "startTimeSeconds"){
+					return "比赛开始时间"
+				}
+				if (key ==="relativeTimeSeconds"){
+					return "比赛距今(负数表示未开始)"
+				}
+				if (key === "name"){
+					return "比赛名称"
+				}
+				if (key === "creationTimeSeconds"){
+					return "创建时间"
+				}
+				if (key === "programmingLanguage"){
+					return "编程语言"
+				}
+				// if (key === "")verdict: OK
+				if(key ==="passedTestCount"){
+					return "通过测试集"
+				}
+				if(key === "timeConsumedMillis"){
+					return "用时"
+				}
+				if(key ==="memoryConsumedBytes"){
+					return "占用内存"
+				}
+				if(key ==="paticipateType"){
+					return "参赛类型"
+				}
+				if (key === "verdict"){
+					return "状态"
+				}
+				if (key==="problemIndex"){
+					return "题号"
+				}
+				if (key==="contestName"){
+					return "比赛名称"
+				}
+				if (key==="ratingUpdateTimeSeconds"){
+					return "rating更新时间"
+				}
+				
+				return key
 			}
 
 			function normalizeUsers(data) {
@@ -555,12 +327,36 @@
 
 			function renderUserInfo(info) {
 				userAvatar.src = info && info.avatar ? info.avatar : DEFAULT_AVATAR;
-				setText(userHandle, info && info.handle);
+				const ratingValue = info && typeof info.rating === "number" ? info.rating : null;
+				const handleText = info && info.handle ? String(info.handle) : "-";
+
+				userHandle.textContent = handleText;
+				userHandle.style.color = "";
 				setText(userRank, info && info.rank);
+				setText(userRating, ratingValue);
 				setText(userMaxRating, info && info.maxRating);
 				setText(userMaxRank, info && info.maxRank);
 				setText(userMaxRating180, info && info.maxRatingIn180days);
 				setText(userContests180, info && info.contestsIn180days);
+
+				if (handleText !== "-" && ratingValue != null) {
+					const color = colorUsernameByRating(ratingValue);
+					if (color) {
+						userHandle.style.color = color;
+					} else if (ratingValue >= 3000) {
+						userHandle.textContent = "";
+						const firstChar = handleText.charAt(0);
+						const rest = handleText.slice(1);
+						const firstSpan = document.createElement("span");
+						firstSpan.style.color = "#000";
+						firstSpan.textContent = firstChar;
+						const restSpan = document.createElement("span");
+						restSpan.style.color = "#d00";
+						restSpan.textContent = rest;
+						userHandle.appendChild(firstSpan);
+						userHandle.appendChild(restSpan);
+					}
+				}
 			}
 
 			function normalizeUserInfo(data) {
@@ -708,20 +504,51 @@
 				if (value == null || value === "") {
 					return "-";
 				}
-				return String(value);
+				return String(value)
 			}
 
 			function formatLateValue(key, value) {
+				if (key === "onTime") {
+					return mapOnTime(value);
+				}
 				if (key === "creationTimeSeconds") {
 					return formatDate(value);
 				}
 				if (key === "relativeTimeSeconds") {
 					return formatRelativeTime(value);
 				}
+				if (key === "paticipateType") {
+					return mapParticipateType(value);
+				}
 				if (value == null || value === "") {
 					return "-";
 				}
 				return String(value);
+			}
+
+			function mapOnTime(value) {
+				const numeric = Number(value);
+				if (Number.isNaN(numeric)) {
+					return "-";
+				}
+				if (numeric === -1) {
+					return "迟交";
+				}
+				if (numeric === 0) {
+					return "迟交";
+				}
+				if (numeric === 1) {
+					return "非迟交";
+				}
+				return String(numeric);
+			}
+
+			function mapParticipateType(value) {
+				const index = Number(value);
+				if (Number.isNaN(index) || index < 0 || index >= PARTICIPATE_TYPE_LABELS.length) {
+					return "UNKNOWN";
+				}
+				return PARTICIPATE_TYPE_LABELS[index];
 			}
 
 			function formatRecordValue(key, value) {
@@ -775,6 +602,8 @@
 
 			function applyLateFilters(data) {
 				let filtered = data || [];
+				const onTimeFilter = lateOnTimeFilter.value;
+				const typeFilter = lateTypeFilter.value;
 				const query = lateSearch.value.trim().toLowerCase();
 				if (query) {
 					filtered = filtered.filter((item) => {
@@ -793,6 +622,26 @@
 							langText.toLowerCase().includes(query) ||
 							problemName.toLowerCase().includes(query)
 						);
+					});
+				}
+
+				if (onTimeFilter !== "all") {
+					filtered = filtered.filter((item) => {
+						const value = Number(item && item.onTime);
+						if (Number.isNaN(value)) {
+							return false;
+						}
+						if (onTimeFilter === "late") {
+							return value === -1;
+						}
+						return value !== -1;
+					});
+				}
+
+				if (typeFilter !== "all") {
+					filtered = filtered.filter((item) => {
+						const label = mapParticipateType(item && item.paticipateType);
+						return label === typeFilter;
 					});
 				}
 
@@ -867,10 +716,17 @@
 			function renderLateList() {
 				const total = lateData.length;
 				const filtered = applyLateFilters(lateData);
-				lateCount.textContent = `总条数: ${total}，筛选后: ${filtered.length}`;
+				const filteredTotal = filtered.length;
+				const totalPages = Math.max(1, Math.ceil(filteredTotal / LATE_PER_PAGE));
+				latePage = Math.min(latePage, totalPages);
+				lateCount.textContent = `总条数: ${total}，筛选后: ${filteredTotal}`;
+				latePageInfo.textContent = `Page ${latePage} / ${totalPages}`;
+				latePrev.disabled = latePage <= 1;
+				lateNext.disabled = latePage >= totalPages;
 				lateList.innerHTML = "";
 
-				if (filtered.length === 0) {
+				// debug
+				if (filteredTotal === 0) {
 					const empty = document.createElement("div");
 					empty.className = "placeholder";
 					empty.textContent = "No data";
@@ -878,7 +734,10 @@
 					return;
 				}
 
-				filtered.forEach((item) => {
+				const start = (latePage - 1) * LATE_PER_PAGE;
+				const items = filtered.slice(start, start + LATE_PER_PAGE);
+
+				items.forEach((item) => {
 					const wrapper = document.createElement("div");
 					wrapper.className = "late-item";
 
@@ -888,12 +747,12 @@
 					right.className = "late-right";
 
 					Object.keys(item || {}).forEach((key) => {
-						if (key === "onTime" || key === "problem") {
+						if (key === "problem") {
 							return;
 						}
 						const field = document.createElement("div");
 						field.className = "late-field";
-						field.textContent = `${key}: ${formatLateValue(key, item[key])}`;
+						field.textContent = `${getKeyInChinese(key)}: ${formatLateValue(key, item[key])}`;
 						left.appendChild(field);
 					});
 
@@ -923,7 +782,7 @@
 						Object.keys(problem).forEach((key) => {
 							const field = document.createElement("div");
 							field.className = "late-field";
-							field.textContent = `${key}: ${formatLateValue(key, problem[key])}`;
+							field.textContent = `${getKeyInChinese(key)}: ${formatLateValue(key, problem[key])}`;
 							problemBox.appendChild(field);
 						});
 					}
@@ -1006,7 +865,8 @@
 				contestPrev.disabled = contestPage <= 1;
 				contestNext.disabled = contestPage >= totalPages;
 				contestList.innerHTML = "";
-
+				
+				// debug用，占位符
 				if (filteredTotal === 0) {
 					const empty = document.createElement("div");
 					empty.className = "placeholder";
@@ -1035,7 +895,7 @@
 						Object.keys(contest || {}).forEach((key) => {
 							const field = document.createElement("div");
 							field.className = "contest-field";
-							field.textContent = `${key}: ${formatContestValue(key, contest[key])}`;
+							field.textContent = `${getKeyInChinese(key)}: ${formatContestValue(key, contest[key])}`;
 							wrapper.appendChild(field);
 						});
 
@@ -1058,6 +918,7 @@
 				recordNext.disabled = recordPage >= totalPages;
 				recordList.innerHTML = "";
 
+				// debug
 				if (filteredTotal === 0) {
 					const empty = document.createElement("div");
 					empty.className = "placeholder";
@@ -1079,7 +940,7 @@
 						}
 						const field = document.createElement("div");
 						field.className = "record-field";
-						field.textContent = `${key}: ${formatRecordValue(key, record[key])}`;
+						field.textContent = `${getKeyInChinese(key)}: ${formatRecordValue(key, record[key])}`;
 						wrapper.appendChild(field);
 					});
 
@@ -1129,7 +990,7 @@
 							Object.keys(problem || {}).forEach((key) => {
 								const field = document.createElement("div");
 								field.className = "record-field";
-								field.textContent = `${key}: ${formatRecordValue(key, problem[key])}`;
+								field.textContent = `${getKeyInChinese(key)}: ${formatRecordValue(key, problem[key])}`;
 								problemWrapper.appendChild(field);
 							});
 							problemBox.appendChild(problemWrapper);
@@ -1220,7 +1081,7 @@
 						}
 						const field = document.createElement("div");
 						field.className = "submission-field";
-						field.textContent = `${key}: ${formatSubmissionValue(key, submission[key])}`;
+						field.textContent = `${getKeyInChinese(key)}: ${formatSubmissionValue(key, submission[key])}`;
 						wrapper.appendChild(field);
 					});
 
@@ -1318,6 +1179,7 @@
 			async function loadLateSubmissions(handle) {
 				lateStatus.textContent = "";
 				lateData = [];
+				latePage = 1;
 				renderLateList();
 
 				if (!handle) {
@@ -1327,10 +1189,12 @@
 				try {
 					const data = await getLateSubmissions(handle);
 					lateData = normalizeLateList(data);
+					latePage = 1;
 					renderLateList();
 				} catch (error) {
 					lateStatus.textContent = "Failed to load late submissions.";
 					lateData = [];
+					latePage = 1;
 					renderLateList();
 				}
 			}
@@ -1370,16 +1234,9 @@
 				loadContestRecord(handle);
 			});
 
-			recordToggle.addEventListener("click", () => {
-				const isHidden = recordSection.classList.contains("hidden");
-				recordSection.classList.toggle("hidden", !isHidden);
-				recordToggle.textContent = isHidden ? "隐藏竞赛记录" : "竞赛记录";
-			});
-
 			recordNav.addEventListener("click", () => {
 				setActivePage("home");
 				recordSection.classList.remove("hidden");
-				recordToggle.textContent = "隐藏竞赛记录";
 			});
 
 			function handleContestFilterChange() {
@@ -1398,17 +1255,38 @@
 			});
 
 			function handleLateFilterChange() {
+				latePage = 1;
 				renderLateList();
 			}
 
 			lateSearch.addEventListener("input", handleLateFilterChange);
 			lateStartDate.addEventListener("change", handleLateFilterChange);
 			lateEndDate.addEventListener("change", handleLateFilterChange);
+			lateOnTimeFilter.addEventListener("change", handleLateFilterChange);
+			lateTypeFilter.addEventListener("change", handleLateFilterChange);
 			lateReset.addEventListener("click", () => {
 				lateSearch.value = "";
 				lateStartDate.value = "";
 				lateEndDate.value = "";
+				lateOnTimeFilter.value = "all";
+				lateTypeFilter.value = "all";
 				handleLateFilterChange();
+			});
+
+			latePrev.addEventListener("click", () => {
+				if (latePage > 1) {
+					latePage -= 1;
+					renderLateList();
+				}
+			});
+
+			lateNext.addEventListener("click", () => {
+				const filteredTotal = applyLateFilters(lateData).length;
+				const totalPages = Math.max(1, Math.ceil(filteredTotal / LATE_PER_PAGE));
+				if (latePage < totalPages) {
+					latePage += 1;
+					renderLateList();
+				}
 			});
 
 			contestPrev.addEventListener("click", () => {
