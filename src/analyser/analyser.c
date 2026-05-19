@@ -263,6 +263,8 @@ void parse_and_output(Data* coredata, char* username) {
     cJSON_AddNumberToObject(UserInfoResult,"maxRatingIn180days",maxRatingIn180days);
     output_json_with_username(UserInfoResult,username,"userInfo.json");
     sprintf(logmsg,"%s在180天内，最高分为%d，参加了%d场比赛。",username,maxRatingIn180days,contestsIn180days);
+    contestsIn180days = 0; // 修复多用户数据错位的问题
+    maxRatingIn180days = 0;
     log_message(LOG_WARNING,logmsg);
     if (contest_index != NULL) {
         free(contest_index);
