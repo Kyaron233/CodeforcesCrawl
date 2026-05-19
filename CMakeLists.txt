@@ -12,7 +12,7 @@ project(codeforce C)
 
 find_package(CURL REQUIRED)
 find_package(OpenSSL REQUIRED)
-
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}") 
 add_executable(codeforce 
     src/main.c
     cJSON/cJSON.c
