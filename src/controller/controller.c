@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <curl/curl.h>
 #include "utils/logger.h"
-#include "utils/data_compositor.h"
 #include "cJSON.h"
 #include "utils/output.h"
 #include "crawler/crawler.h"
@@ -80,7 +79,7 @@ void startApp(char* username){
    
    crawl_data(username);
    parse_and_output(coredata,username);
-   
+   append_user_list(username);
    
 }
 

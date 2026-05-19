@@ -129,3 +129,96 @@ int output_rawstring_with_username(const char* raw, const char* username, const 
     }
     return ok;
 }
+void append_user_list(const char* username) {
+    char path[512];
+    FILE* userlist = NULL;
+    char* buffer = NULL;
+    long size = 0;
+    cJSON* root = NULL;
+    int found = 0;
+    char msg[128];
+
+    if (username == NULL || username[0] == '\0') {
+        return;
+    }
+
+    if (!ensure_output_dir_exists()) {
+        return;
+    }
+
+    {
+        int written = snprintf(path, sizeof(path), "%sUser.json", OUTPUT_DIR);
+        if (written < 0 || (size_t)written >= sizeof(path)) {
+            return;
+        }
+    }
+
+    userlist = fopen(path, "rb");
+    if (userlist != NULL) {
+        if (fseek(userlist, 0, SEEK_END) == 0) {
+            size = ftell(userlist);
+        }
+        rewind(userlist);
+
+        if (size > 0) {
+            buffer = (char*)malloc((size_t)size + 1);
+            if (buffer == NULL) {
+                fclose(userlist);
+                return;
+            }
+            if (fread(buffer, 1, (size_t)size, userlist) != (size_t)size) {
+                fclose(userlist);
+                free(buffer);
+                return;
+            }
+            buffer[size] = '\0';
+            root = cJSON_Parse(buffer);
+        }
+
+        fclose(userlist);
+    } else if (errno != ENOENT) {
+        snprintf(msg, sizeof(msg), "无法打开%s: %s", path, strerror(errno));
+        log_message(ERROR, msg);
+        return;
+    }
+
+    if (size > 0) {
+        if (root == NULL || !cJSON_IsArray(root)) {
+            snprintf(msg, sizeof(msg), "源文件%s不是JSON数组", path);
+            log_message(ERROR, msg);
+            cJSON_Delete(root);
+            free(buffer);
+            return;
+        }
+    } else if (root == NULL) {
+        root = cJSON_CreateArray();
+        if (root == NULL) {
+            free(buffer);
+            return;
+        }
+    }
+
+    {
+        cJSON* item = NULL;
+        cJSON_ArrayForEach(item, root) {
+            if (cJSON_IsString(item) && item->valuestring != NULL &&
+                strcmp(item->valuestring, username) == 0) {
+                found = 1;
+                log_message(WARNING,"当前用户已在列表中");
+                break;
+            }
+        }
+    }
+
+    if (!found) {
+        cJSON_AddItemToArray(root, cJSON_CreateString(username));
+    }
+
+    output_json(root, path);
+
+    snprintf(msg, sizeof(msg), "当前用户数：%d", cJSON_GetArraySize(root));
+    log_message(INFO, msg);
+
+    cJSON_Delete(root);
+    free(buffer);
+}
