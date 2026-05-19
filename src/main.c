@@ -41,6 +41,9 @@ int main(int argc, char *argv[]) {
                 return 1;
         }
     }
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+    setlocale(NS_ALL, ".UTF-8");
     startApp(username);
     // 这里的logger_init主要是能否成功打开日志文件，失败了就只能输出到控制台了
     // 日志放在log/log.txt，按照规范输出日志。使用a模式打开文件，所有的内容都追加到文件末尾

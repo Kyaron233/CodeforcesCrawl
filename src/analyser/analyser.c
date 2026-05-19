@@ -38,20 +38,20 @@ int maxRatingIn180days = 0;
 // 干脆就在这个函数处理得了，顶多返回个status啥的
 void parse_and_output(Data* coredata, char* username) {
     cJSON* parsed_data[QueneCount] = {0};
-    log_message(INFO,"开始运行data_compositor..");
+    log_message(LOG_INFO,"开始运行data_compositor..");
     if (coredata == NULL || username == NULL) {
-        log_message(ERROR,"获取用户名或爬虫数据时出错！");
+        log_message(LOG_ERROR,"获取用户名或爬虫数据时出错！");
         return;
     }
 
     for (int i = 0; i < QueneCount; ++i) {
         if (coredata[i].chunk == NULL || coredata[i].chunk[0] == '\0') {
-            log_message(WARNING,"当前parsed_data数组为空");
+            log_message(LOG_WARNING,"当前parsed_data数组为空");
             parsed_data[i] = NULL;
             continue;
         }
         parsed_data[i] = cJSON_Parse(coredata[i].chunk);
-        log_message(INFO,"当前parsed_data数组正常");
+        log_message(LOG_INFO,"当前parsed_data数组正常");
     }
 
     
@@ -183,7 +183,7 @@ void parse_and_output(Data* coredata, char* username) {
         }
         
         sprintf(logmsg,"%s有%d条提交！",username,submissionCount);
-        log_message(WARNING,logmsg);
+        log_message(LOG_WARNING,logmsg);
         if (submissionCount > 1) {
             qsort(submissionList, (size_t)submissionCount, sizeof(Submission), compare_submission_by_contest_id);
         }
@@ -257,13 +257,13 @@ void parse_and_output(Data* coredata, char* username) {
     cJSON* UserInfoResultArray = cJSON_GetObjectItemCaseSensitive(parsed_data[UserInfoData],"result");
     cJSON* UserInfoResult = cJSON_GetArrayItem(UserInfoResultArray,0);
     if(!cJSON_IsArray(UserInfoResult)){
-        log_message(WARNING,"UserInfoResult不是数组");
+        log_message(LOG_WARNING,"UserInfoResult不是数组");
     }
     cJSON_AddNumberToObject(UserInfoResult,"contestsIn180days",contestsIn180days);
     cJSON_AddNumberToObject(UserInfoResult,"maxRatingIn180days",maxRatingIn180days);
     output_json_with_username(UserInfoResult,username,"userInfo.json");
     sprintf(logmsg,"%s在180天内，最高分为%d，参加了%d场比赛。",username,maxRatingIn180days,contestsIn180days);
-    log_message(WARNING,logmsg);
+    log_message(LOG_WARNING,logmsg);
     if (contest_index != NULL) {
         free(contest_index);
     }

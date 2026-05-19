@@ -35,10 +35,10 @@ void check(quene task_order){
 
     if(corestatus[task_order].status == STATUS_OK) {
         snprintf(message, sizeof(message), "%s执行完毕。", taskname);
-        log_message(INFO, message);
+        log_message(LOG_INFO, message);
     }
     else {
-        LogLevel level = coredata[task_order].size == 0 ? ERROR : WARNING;
+        LogLevel level = coredata[task_order].size == 0 ? LOG_ERROR : LOG_WARNING;
         snprintf(message, sizeof(message), "%s未正常执行", taskname);
         log_message(level, message);
     }
@@ -75,7 +75,7 @@ void startApp(char* username){
     if(!logger_init()) {
         fprintf(stderr, "日志文件初始化失败，使用控制台输出\n");
     }
-   log_message(INFO,"开始执行任务...");
+   log_message(LOG_INFO,"开始执行任务...");
    
    crawl_data(username);
    parse_and_output(coredata,username);

@@ -8,6 +8,85 @@
 
 static CURL *global_curl = NULL; 
 static char apikey[200] = {'\0'};
+
+static int file_exists(const char* path) {
+    FILE* file = NULL;
+
+    if (path == NULL || path[0] == '\0') {
+        return 0;
+    }
+
+    file = fopen(path, "rb");
+    if (file != NULL) {
+        fclose(file);
+        return 1;
+    }
+
+    return 0;
+}
+
+static const char* resolve_ca_bundle_path(void) {
+    static char cached_path[512];
+    static int checked = 0;
+    const char* env = NULL;
+
+    if (checked) {
+        return cached_path[0] != '\0' ? cached_path : NULL;
+    }
+
+    checked = 1;
+
+    env = getenv("CURL_CA_BUNDLE");
+    if (env != NULL && env[0] != '\0' && file_exists(env)) {
+        snprintf(cached_path, sizeof(cached_path), "%s", env);
+        return cached_path;
+    }
+
+    env = getenv("SSL_CERT_FILE");
+    if (env != NULL && env[0] != '\0' && file_exists(env)) {
+        snprintf(cached_path, sizeof(cached_path), "%s", env);
+        return cached_path;
+    }
+
+    const char* candidates[] = {
+        "certs/cacert.pem",
+        "certs/ca-bundle.crt",
+        "certs/curl-ca-bundle.crt",
+        "../certs/cacert.pem",
+        "../certs/ca-bundle.crt",
+        "../../certs/cacert.pem",
+        "../../certs/ca-bundle.crt",
+        "resources/cacert.pem",
+        "../resources/cacert.pem",
+        "../../resources/cacert.pem"
+    };
+
+    for (size_t i = 0; i < sizeof(candidates) / sizeof(candidates[0]); ++i) {
+        if (file_exists(candidates[i])) {
+            snprintf(cached_path, sizeof(cached_path), "%s", candidates[i]);
+            return cached_path;
+        }
+    }
+
+    return NULL;
+}
+
+static void apply_ca_bundle_option(CURL* curl) {
+    const char* ca_bundle = resolve_ca_bundle_path();
+
+    if (ca_bundle != NULL) {
+        curl_easy_setopt(curl, CURLOPT_CAINFO, ca_bundle);
+        return;
+    }
+
+#ifdef WIN32
+    static int warned = 0;
+    if (!warned) {
+        log_message(LOG_WARNING, "CA bundle not found; set CURL_CA_BUNDLE or place certs/cacert.pem.");
+        warned = 1;
+    }
+#endif
+}
 // 进阶版的日志
 static void init_status(Status* status) {
     if (status == NULL) {
@@ -64,7 +143,7 @@ size_t write_callback(char* data,size_t size,size_t nmemb,void* userp){
         char* new_userdata_ptr = realloc(userdata->chunk, new_cap);
         if(new_userdata_ptr==NULL){
             sprintf(msg,"[write_callback]:爬取数据时分配内存失败！");
-            log_message(ERROR,msg);
+            log_message(LOG_ERROR,msg);
             return 0;
         }
         userdata->chunk = new_userdata_ptr;
@@ -81,14 +160,16 @@ void set_custom_options(CURL *curl) {
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L); // 允许重定向
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+    curl_easy_setopt(curl,CURLOPT_SSL_OPTIONS,CURLSSLOPT_NATIVE_CA);
+    apply_ca_bundle_option(curl);
 }
 CURL* getCurl(){
     if(global_curl!=NULL) return global_curl;
     else{
-        log_message(INFO,"全局curl句柄失效，正在尝试初始化");
+        log_message(LOG_INFO,"全局curl句柄失效，正在尝试初始化");
         global_curl = curl_easy_init();
         if(global_curl==NULL) {
-            log_message(ERROR,"无法初始化curl！");
+            log_message(LOG_ERROR,"无法初始化curl！");
             return NULL;
         }
         return global_curl;
@@ -111,7 +192,7 @@ Data getContestList(Status* status) {
     }
 
     CURLcode code;
-    log_message(INFO,"正在执行getContestList...");
+    log_message(LOG_INFO,"正在执行getContestList...");
     curl_easy_reset(curl);
     set_custom_options(curl);
     curl_easy_setopt(curl, CURLOPT_URL, BASE_URL "/contest.list?gym=false"); // 不获取gym的数据
@@ -173,7 +254,7 @@ Data getUserAttendedContestList(Status* status,char* username){
     CURLcode code;
     char completed_url[100];
     sprintf(completed_url,"%s/user.rating?handle=%s",BASE_URL,username);
-    log_message(INFO,"正在执行getUserAttendedContestList...");
+    log_message(LOG_INFO,"正在执行getUserAttendedContestList...");
     curl_easy_reset(curl);
     set_custom_options(curl);
     curl_easy_setopt(curl, CURLOPT_URL,completed_url); // https://codeforces.com/api/user.rating?handle={username}
@@ -251,7 +332,7 @@ Data getUserStatus(Status* status,char* username){
         return data;
     }
 
-    log_message(INFO,"正在执行getUserStatus...");
+    log_message(LOG_INFO,"正在执行getUserStatus...");
     curl_easy_reset(curl);
     set_custom_options(curl);
     curl_easy_setopt(curl, CURLOPT_URL, completed_url); // https://codeforces.com/api/user.status?handle={username}
@@ -324,7 +405,7 @@ Data getUserInfo(Status* status, char* username) {
         return data;
     }
 
-    log_message(INFO,"正在执行getUserInfo...");
+    log_message(LOG_INFO,"正在执行getUserInfo...");
     curl_easy_reset(curl);
     set_custom_options(curl);
     curl_easy_setopt(curl, CURLOPT_URL, completed_url); // https://codeforces.com/api/user.info?handles={username}
@@ -399,7 +480,7 @@ Data getUserRating(Status* status,char* username){
         return data;
     }
 
-    log_message(INFO,"正在执行getUserRating...");
+    log_message(LOG_INFO,"正在执行getUserRating...");
     curl_easy_reset(curl);
     set_custom_options(curl);
     curl_easy_setopt(curl, CURLOPT_URL, completed_url); // https://codeforces.com/api/user.rating?handle={username}

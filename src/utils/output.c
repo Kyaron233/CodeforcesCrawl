@@ -49,19 +49,19 @@ int output_json(const cJSON* root, const char* filename) {
     char msg[100];
     if (out == NULL) {
         sprintf(msg,"无法打开指定文件：%s",filename);
-        log_message(ERROR,msg);
+        log_message(LOG_ERROR,msg);
         cJSON_free(json_text);
         return 0;
     }
 
     if (fputs(json_text, out) != EOF) {
         sprintf(msg,"%s写入成功",filename);
-        log_message(INFO,msg);
+        log_message(LOG_INFO,msg);
         ok = 1;
     }
     else {
         sprintf(msg,"%s写入失败",filename);
-        log_message(ERROR,msg);
+        log_message(LOG_ERROR,msg);
     }
 
     fclose(out);
@@ -121,11 +121,11 @@ int output_rawstring_with_username(const char* raw, const char* username, const 
     fclose(out);
     if(ok) {
         sprintf(msg,"output_rawstring成功执行！");
-        log_message(INFO,msg);
+        log_message(LOG_INFO,msg);
     }
     else {
         sprintf(msg,"output_rawstring出错！");
-        log_message(ERROR,msg);
+        log_message(LOG_ERROR,msg);
     }
     return ok;
 }
@@ -178,14 +178,14 @@ void append_user_list(const char* username) {
         fclose(userlist);
     } else if (errno != ENOENT) {
         snprintf(msg, sizeof(msg), "无法打开%s: %s", path, strerror(errno));
-        log_message(ERROR, msg);
+        log_message(LOG_ERROR, msg);
         return;
     }
 
     if (size > 0) {
         if (root == NULL || !cJSON_IsArray(root)) {
             snprintf(msg, sizeof(msg), "源文件%s不是JSON数组", path);
-            log_message(ERROR, msg);
+            log_message(LOG_ERROR, msg);
             cJSON_Delete(root);
             free(buffer);
             return;
@@ -204,7 +204,7 @@ void append_user_list(const char* username) {
             if (cJSON_IsString(item) && item->valuestring != NULL &&
                 strcmp(item->valuestring, username) == 0) {
                 found = 1;
-                log_message(WARNING,"当前用户已在列表中");
+                log_message(LOG_WARNING,"当前用户已在列表中");
                 break;
             }
         }
@@ -217,7 +217,7 @@ void append_user_list(const char* username) {
     output_json(root, path);
 
     snprintf(msg, sizeof(msg), "当前用户数：%d", cJSON_GetArraySize(root));
-    log_message(INFO, msg);
+    log_message(LOG_INFO, msg);
 
     cJSON_Delete(root);
     free(buffer);

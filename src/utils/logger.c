@@ -34,14 +34,14 @@ void log_message(LogLevel level, const char* message) {
     FILE* logger = global_logger; 
     const char* level_str;
     switch(level) {
-        case INFO:
-            level_str = "INFO";
+        case LOG_INFO:
+            level_str = "LOG_INFO";
             break;
-        case WARNING:
-            level_str = "WARNING";
+        case LOG_WARNING:
+            level_str = "LOG_WARNING";
             break;
-        case ERROR:
-            level_str = "ERROR";
+        case LOG_ERROR:
+            level_str = "LOG_ERROR";
             break;
         default:
             level_str = "UNKNOWN";
@@ -51,13 +51,13 @@ void log_message(LogLevel level, const char* message) {
     
     // 输出到控制台
     switch(level) {
-        case INFO:
+        case LOG_INFO:
             LOG_INFO("%s", message);
             break;
-        case WARNING:
+        case LOG_WARNING:
             LOG_WARN("%s", message);
             break;
-        case ERROR:
+        case LOG_ERROR:
             LOG_ERROR("%s", message);
             break;
         default:
@@ -67,7 +67,7 @@ void log_message(LogLevel level, const char* message) {
 
 void detailed_log(Status* status) {
     if (status == NULL) {
-        log_message(ERROR, "Status is NULL");
+        log_message(LOG_ERROR, "Status is NULL");
         return;
     }
 
@@ -106,6 +106,6 @@ void detailed_log(Status* status) {
         curl_err
     );
 
-    LogLevel level = (status->status == STATUS_OK) ? INFO : WARNING;
+    LogLevel level = (status->status == STATUS_OK) ? LOG_INFO : LOG_WARNING;
     log_message(level, message);
 }
