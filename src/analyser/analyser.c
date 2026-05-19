@@ -225,7 +225,7 @@ void parse_and_output(Data* coredata, char* username) {
                     contestRecords[i].userRating.participateType = submissionList[idx].participateType;
                     //下面判断是不是迟交 relativeTimeSeconds是从比赛开始到该代码提交经过的秒数
                     if (submissionList[idx].relativeTimeSeconds > contestRecords[i].userRating.durationSeconds){
-                        submissionList[idx].onTime = 0;
+                        submissionList[idx].onTime = -1;
                     }
                     else submissionList[idx].onTime=1;
                     submission_list_push_back(&contestRecords[i].submissions, &submissionList[idx]);
@@ -238,7 +238,7 @@ void parse_and_output(Data* coredata, char* username) {
             cJSON* late_submissions = cJSON_CreateArray();
             if (late_submissions != NULL) {
                 for (int i = 0; i < submissionCount; ++i) {
-                    if (submissionList[i].checked == 0 || submissionList[i].onTime == 0) {
+                    if (submissionList[i].checked == 0 || submissionList[i].onTime == -1 || submissionList[i].onTime == 0) {
                         cJSON* item = build_submission_json(&submissionList[i]);
                         if (item != NULL) {
                             cJSON_AddItemToArray(late_submissions, item);
