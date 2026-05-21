@@ -32,3 +32,11 @@ CF_api.txt
 log/log.txt
 src/frontend/Data
 output/
+codeforce.exe
+legacy.dll
+libcrypto-3-x64.dll
+libcurl-d.dll
+libcurl.dll
+libssl-3-x64.dll
+libzlibd1.dll
+libzlib1.dll
