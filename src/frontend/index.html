@@ -12,7 +12,6 @@
 		<div class="layout">
 			<nav class="sidebar">
 				<button type="button" data-page="home" aria-current="page">主页</button>
-				<button type="button" id="recordNav">竞赛提交记录</button>
 				<button type="button" data-page="contests">竞赛列表</button>
 				<button type="button" data-page="late">补题记录</button>
 				<button type="button" data-page="chart">分数折线图</button>
@@ -40,7 +39,8 @@
 						</div>
 					</div>
 					<div id="statusMessage" class="status"></div>
-					<div id="recordSection" class="record-section hidden">
+					<h3 class="record-header">竞赛提交记录</h3>
+					<div id="recordSection" class="record-section">
 						<div class="record-toolbar">
 							<div id="recordCount">总条数: -</div>
 							<div class="pagination">
@@ -194,7 +194,6 @@
 			const chartReset = document.getElementById("chartReset");
 			const chartContainer = document.getElementById("chartContainer");
 			const chartStatus = document.getElementById("chartStatus");
-			const recordNav = document.getElementById("recordNav");
 			const recordSection = document.getElementById("recordSection");
 			const recordCount = document.getElementById("recordCount");
 			const recordPrev = document.getElementById("recordPrev");
@@ -829,7 +828,7 @@
 					right.className = "late-right";
 
 					Object.keys(item || {}).forEach((key) => {
-						if (key === "problem" || key === "onTime") {
+						if (key === "problem") {
 							return;
 						}
 						const field = document.createElement("div");
@@ -1158,7 +1157,7 @@
 					wrapper.appendChild(indexField);
 
 					Object.keys(submission || {}).forEach((key) => {
-						if (key === "onTime" || key === "problem") {
+						if (key === "problem") {
 							return;
 						}
 						const field = document.createElement("div");
@@ -1318,11 +1317,6 @@
 				loadContestList(handle);
 				loadLateSubmissions(handle);
 				loadContestRecord(handle);
-			});
-
-			recordNav.addEventListener("click", () => {
-				setActivePage("home");
-				recordSection.classList.remove("hidden");
 			});
 
 			function handleContestFilterChange() {
