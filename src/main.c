@@ -8,6 +8,9 @@
 #include <curl/curl.h>
 #include "utils/arg_utils.h"
 #include "controller/controller.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 // 处理选项这一块让gemini干的
 static struct option long_options[] = {
@@ -18,11 +21,23 @@ static struct option long_options[] = {
 char username[200]; 
 char multiUserList[200];
 int main(int argc, char *argv[]) {
+#ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
     setlocale(NS_ALL, ".UTF-8");
+#endif
     int opt;
     int multiUser = 0;
+    if (argc == 1) {
+        printf("请输入用户名: ");
+        fflush(stdout);
+        if (fgets(username, sizeof(username), stdin) != NULL) {
+            size_t len = strlen(username);
+            if (len > 0 && username[len - 1] == '\n') {
+                username[len - 1] = '\0';
+            }
+        }
+    }
     while((opt = getopt_long(argc, argv, "hM:U:", long_options, NULL)) != -1) {
         switch(opt) {
             case 'h':

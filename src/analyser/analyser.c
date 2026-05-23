@@ -19,6 +19,9 @@ typedef struct {
 
 char logmsg[1000];
 static int compare_submission_by_contest_id(const void* lhs, const void* rhs);
+static long contest_record_latest_creation_time(const ContestRecord* record);
+static int qsort_contestRecords(const void* lhs, const void* rhs);
+static int qsort_submission(const void* lhs, const void* rhs);
 static int compare_contest_time_by_id(const void* lhs, const void* rhs);
 static int build_contest_time_index(cJSON* contestList, ContestTimeIndex** out_list, int* out_count);
 static const ContestTimeIndex* find_contest_time_index(const ContestTimeIndex* list, int count, int contestId);
@@ -231,10 +234,12 @@ void parse_and_output(Data* coredata, char* username) {
                     submission_list_push_back(&contestRecords[i].submissions, &submissionList[idx]);
                 }
             }
+            qsort(contestRecords,(size_t)UserAttendCount,sizeof(ContestRecord),qsort_contestRecords);
             output_contest_records_json(contestRecords, UserAttendCount, username); // 这里是因为我用的是自己modify的结构体
         }
         // 输出所有迟交和unchecked的提交记录
         if (submissionList != NULL && submissionCount > 0) {
+            qsort(submissionList,submissionCount,sizeof(Submission),qsort_submission);
             cJSON* late_submissions = cJSON_CreateArray();
             if (late_submissions != NULL) {
                 for (int i = 0; i < submissionCount; ++i) {
@@ -386,6 +391,52 @@ static int compare_submission_by_contest_id(const void* lhs, const void* rhs) {
         return -1;
     }
     if (a->contestId > b->contestId) {
+        return 1;
+    }
+    return 0;
+}
+
+static long contest_record_latest_creation_time(const ContestRecord* record) {
+    SubmissionNode* node = NULL;
+    long latest = 0;
+
+    if (record == NULL || record->submissions.head == NULL) {
+        return 0;
+    }
+
+    for (node = record->submissions.head->next; node != record->submissions.head; node = node->next) {
+        long value = node->submission.creationTimeSeconds;
+        if (value > latest) {
+            latest = value;
+        }
+    }
+
+    return latest;
+}
+
+static int qsort_contestRecords(const void* lhs, const void* rhs) {
+    const ContestRecord* a = (const ContestRecord*)lhs;
+    const ContestRecord* b = (const ContestRecord*)rhs;
+    long a_time = contest_record_latest_creation_time(a);
+    long b_time = contest_record_latest_creation_time(b);
+
+    if (a_time > b_time) {
+        return -1;
+    }
+    if (a_time < b_time) {
+        return 1;
+    }
+    return 0;
+}
+
+static int qsort_submission(const void* lhs, const void* rhs) {
+    const Submission* a = (const Submission*)lhs;
+    const Submission* b = (const Submission*)rhs;
+
+    if (a->creationTimeSeconds > b->creationTimeSeconds) {
+        return -1;
+    }
+    if (a->creationTimeSeconds < b->creationTimeSeconds) {
         return 1;
     }
     return 0;
