@@ -82,7 +82,7 @@ void set_custom_options(CURL *curl) {
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
     curl_easy_setopt(curl,CURLOPT_SSL_OPTIONS,CURLSSLOPT_NATIVE_CA);
-    apply_ca_bundle_option(curl);
+    
 }
 CURL* getCurl(){
     if(global_curl!=NULL) return global_curl;

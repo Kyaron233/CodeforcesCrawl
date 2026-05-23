@@ -43,35 +43,39 @@ static const char* get_task_name(quene task_order) {
     }
 }
 
-void check(quene task_order){
+int check(quene task_order){
     const char* taskname = get_task_name(task_order);
     char message[128];
 
     if(corestatus[task_order].status == STATUS_OK) {
         snprintf(message, sizeof(message), "%s执行完毕。", taskname);
         log_message(LOG_INFO, message);
+        return 1;
     }
     else {
-        LogLevel level = coredata[task_order].size == 0 ? LOG_ERROR : LOG_WARNING;
+        LogLevel level = coredata[task_order].size == 0 ? LOG_ERROR : LOG_WARNING; // 除非请求根本没有发出，否则size好像无法等于0
         snprintf(message, sizeof(message), "%s未正常执行", taskname);
         log_message(level, message);
+        return 0;
     }
 
     detailed_log(&corestatus[task_order]);
 }
 
-void crawl_data(char* username){
+int crawl_data(char* username){
     coredata[ContestListData] =  getContestList(&corestatus[ContestListData]);
-    check(ContestListData);
-
     coredata[UserRatingData] = getUserAttendedContestList(&corestatus[UserRatingData],username);
-    check(UserRatingData);
-
     coredata[UserStatusData] = getUserStatus(&corestatus[UserStatusData],username);
-    check(UserStatusData);
-
     coredata[UserInfoData] = getUserInfo(&corestatus[UserInfoData],username);
-    check(UserInfoData);
+    
+
+    for(int  curTask=0;curTask<QueneCount;curTask++){
+        if(!check(curTask)) {
+            log_message(LOG_ERROR,"获取数据失败！可能是因为用户不存在或者网络错误，停止执行。");
+            return 0;
+        }
+    }
+    return 1;
 }
 
 void parse_data(Data* coredata){
@@ -91,7 +95,13 @@ void startApp(char* username){
     }
    log_message(LOG_INFO,"开始执行任务...");
    
-   crawl_data(username);
+   if(crawl_data(username)) 
+        log_message(LOG_INFO,"数据爬取完成，进入下一步。。。");
+   
+   else {
+        log_message(LOG_ERROR,"爬取数据失败！程序关闭中..");
+        return 0;
+   }
    parse_and_output(coredata,username);
    append_user_list(username);
 }

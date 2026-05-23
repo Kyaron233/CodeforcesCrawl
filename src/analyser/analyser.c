@@ -78,7 +78,7 @@ void parse_and_output(Data* coredata, char* username) {
     int UserAttendCount = cJSON_IsArray(UserAttendResult) ? cJSON_GetArraySize(UserAttendResult) : -1; //用户参加的比赛的计数
 
     RatingChange* rating_changes = NULL;
-
+    
     if (UserAttendCount > 0) {
         rating_changes = (RatingChange*)calloc((size_t)UserAttendCount, sizeof(RatingChange)); // calloc相当于malloc加上自动初始化
         if (rating_changes != NULL) {
