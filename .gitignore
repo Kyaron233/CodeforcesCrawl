@@ -32,3 +32,13 @@ CF_api.txt
 log/log.txt
 src/frontend/Data
 output/
+libcrypto-3-x64.dll
+legacy.dll
+libcurl-d.dll
+libcurl.dll
+libssl-3-x64.dll
+codeforcesCrawler.exe
+codeforcesCrawler
+libzlib1.dll
+libzlibd1.dll
+vcpkg_installed/vcpkg/vcpkg-running.lock

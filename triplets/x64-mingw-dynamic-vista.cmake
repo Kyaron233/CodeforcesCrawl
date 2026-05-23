@@ -9,3 +9,4 @@ set(VCPKG_POLICY_DLLS_WITHOUT_LIBS enabled)
 # curl 8.19 on this MinGW toolchain requires Vista+ macros.
 set(VCPKG_C_FLAGS "-DWINVER=0x0600 -D_WIN32_WINNT=0x0600")
 set(VCPKG_CXX_FLAGS "-DWINVER=0x0600 -D_WIN32_WINNT=0x0600")
+set(VCPKG_BUILD_TYPE debug)

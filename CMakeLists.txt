@@ -8,12 +8,12 @@ elseif(NOT EXISTS "${CMAKE_TOOLCHAIN_FILE}" AND EXISTS "${_repo_vcpkg_toolchain}
     set(CMAKE_TOOLCHAIN_FILE "${_repo_vcpkg_toolchain}" CACHE STRING "Vcpkg toolchain file" FORCE)
 endif()
 
-project(codeforce C) 
+project(codeforcesCrawler C)
 
 find_package(CURL REQUIRED)
 find_package(OpenSSL REQUIRED)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}") 
-add_executable(codeforce 
+add_executable(codeforcesCrawler
     src/main.c
     cJSON/cJSON.c
     src/utils/arg_utils.c
@@ -25,44 +25,44 @@ add_executable(codeforce
     src/crawler/crawler.c
     src/controller/controller.c
     )
-target_include_directories(codeforce PRIVATE
+target_include_directories(codeforcesCrawler PRIVATE
     "cJSON"
     "src/include"
 )
 
-target_link_libraries(codeforce PRIVATE CURL::libcurl OpenSSL::Crypto)
+target_link_libraries(codeforcesCrawler PRIVATE CURL::libcurl OpenSSL::Crypto)
 
 if(WIN32)
-    add_custom_command(TARGET codeforce POST_BUILD
+    add_custom_command(TARGET codeforcesCrawler POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_RUNTIME_DLLS:codeforce>
-            $<TARGET_FILE_DIR:codeforce>
+            $<TARGET_RUNTIME_DLLS:codeforcesCrawler>
+            $<TARGET_FILE_DIR:codeforcesCrawler>
         COMMAND ${CMAKE_COMMAND}
             -DSRC_DIR=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/debug/bin
-            -DDST_DIR=$<TARGET_FILE_DIR:codeforce>
+            -DDST_DIR=$<TARGET_FILE_DIR:codeforcesCrawler>
             -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_runtime_dlls.cmake
         COMMAND ${CMAKE_COMMAND}
             -DSRC_DIR=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin
-            -DDST_DIR=$<TARGET_FILE_DIR:codeforce>
+            -DDST_DIR=$<TARGET_FILE_DIR:codeforcesCrawler>
             -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_runtime_dlls.cmake
         COMMAND_EXPAND_LISTS
         VERBATIM
     )
 elseif(UNIX AND NOT APPLE)
     # Keep runtime lookup local to executable directory after packaging.
-    set_target_properties(codeforce PROPERTIES
+    set_target_properties(codeforcesCrawler PROPERTIES
         BUILD_RPATH "$ORIGIN"
         INSTALL_RPATH "$ORIGIN"
     )
 
-    add_custom_command(TARGET codeforce POST_BUILD
+    add_custom_command(TARGET codeforcesCrawler POST_BUILD
         COMMAND ${CMAKE_COMMAND}
             -DSRC_DIR=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/debug/lib
-            -DDST_DIR=$<TARGET_FILE_DIR:codeforce>
+            -DDST_DIR=$<TARGET_FILE_DIR:codeforcesCrawler>
             -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_runtime_shared_libs.cmake
         COMMAND ${CMAKE_COMMAND}
             -DSRC_DIR=${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib
-            -DDST_DIR=$<TARGET_FILE_DIR:codeforce>
+            -DDST_DIR=$<TARGET_FILE_DIR:codeforcesCrawler>
             -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_runtime_shared_libs.cmake
         VERBATIM
     )

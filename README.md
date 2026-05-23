@@ -2,13 +2,13 @@
 ## 1.项目介绍
 本项目使用C语言开发，加入了`libcurl`,`cJSON`库完成数据获取和数据解析，`vcpkg`和`cmake`作为依赖管理器和构建工具，使用简单的html网页和`eChart`进行数据可视化。
 本项目提供两个脚本，分别用于windows和Linux平台的编译。
-使用`cmake`进行编译后，在命令行执行`.\codeforce.exe` （或`./build/codeforce`如果使用的不是Windows平台）
+使用`cmake`进行编译后，在命令行执行`.\codeforcesCrawler.exe` （或`./build/codeforcesCrawler`如果使用的不是Windows平台）
 程序执行后，在`./output`目录下生成数据
 如果需要可视化展示，需要使用`server_win.exe`或者`server_linux`，你也可以使用`liveserver`之类的插件来挂载网页
 ##### 请不要*直接打开index.html*，否则会因为协议不同，导致网页无法获取到之前爬取到的数据
 
 ## 2.如何运行？
-如果目录下已有codeforces.exe或者codeforces（linux的可执行文件），直接运行即可。（Linux执行前请赋予执行权限）
+如果目录下已有codeforcesCrawler.exe或者codeforcesCrawler（linux的可执行文件），直接运行即可。（Linux执行前请赋予执行权限）
 如果要从头编译，请根据你的电脑修改CMakeLists.txt中的宏（如DCMAKE_C_COMPILER）,然后再执行下面的命令
 Windows:
 ```cmake
