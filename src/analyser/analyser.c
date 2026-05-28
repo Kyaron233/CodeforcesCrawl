@@ -20,6 +20,7 @@ typedef struct {
 char logmsg[1000];
 static int compare_submission_by_contest_id(const void* lhs, const void* rhs);
 static long contest_record_latest_creation_time(const ContestRecord* record);
+static int qsort_contestRecordsInRatingChangeTime(const void* lhs, const void* rhs);
 static int qsort_contestRecords(const void* lhs, const void* rhs);
 static int qsort_submission(const void* lhs, const void* rhs);
 static int compare_contest_time_by_id(const void* lhs, const void* rhs);
@@ -234,7 +235,8 @@ void parse_and_output(Data* coredata, char* username) {
                     submission_list_push_back(&contestRecords[i].submissions, &submissionList[idx]);
                 }
             }
-            qsort(contestRecords,(size_t)UserAttendCount,sizeof(ContestRecord),qsort_contestRecords);
+           //  qsort(contestRecords,(size_t)UserAttendCount,sizeof(ContestRecord),qsort_contestRecords);
+            qsort(contestRecords,(size_t)UserAttendCount,sizeof(ContestRecord),qsort_contestRecordsInRatingChangeTime);
             output_contest_records_json(contestRecords, UserAttendCount, username); // 这里是因为我用的是自己modify的结构体
         }
         // 输出所有迟交和unchecked的提交记录
@@ -665,4 +667,14 @@ static int participate_method(cJSON* item){
     }
 
     return UNKNOWN;
+}
+static int qsort_contestRecordsInRatingChangeTime(const void* lhs, const void* rhs){
+    ContestRecord* a = (ContestRecord*)lhs;
+    ContestRecord* b = (ContestRecord*)rhs;
+
+    long aTime = a->userRating.ratingUpdateTimeSeconds;
+    long bTime = b->userRating.ratingUpdateTimeSeconds;
+
+    if(aTime==bTime) return 0;
+    return aTime-bTime > 0 ? -1 : 1;
 }
