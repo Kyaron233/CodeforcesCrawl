@@ -50,12 +50,14 @@ int check(quene task_order){
     if(corestatus[task_order].status == STATUS_OK) {
         snprintf(message, sizeof(message), "%s执行完毕。", taskname);
         log_message(LOG_INFO, message);
+        //  detailed_log(&corestatus[task_order]);
         return 1;
     }
     else {
         LogLevel level = coredata[task_order].size == 0 ? LOG_ERROR : LOG_WARNING; // 除非请求根本没有发出，否则size好像无法等于0
         snprintf(message, sizeof(message), "%s未正常执行", taskname);
         log_message(level, message);
+        detailed_log(&corestatus[task_order]);
         return 0;
     }
 
@@ -72,6 +74,7 @@ int crawl_data(char* username){
     for(int  curTask=0;curTask<QueneCount;curTask++){
         if(!check(curTask)) {
             log_message(LOG_ERROR,"获取数据失败！可能是因为用户不存在或者网络错误，停止执行。");
+
             return 0;
         }
     }
