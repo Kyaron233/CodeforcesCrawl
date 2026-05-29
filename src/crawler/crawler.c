@@ -77,7 +77,7 @@ size_t write_callback(char* data,size_t size,size_t nmemb,void* userp){
     return realsize;
 }
 void set_custom_options(CURL *curl) {
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L); // 设置超时时间为10秒
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 90L); // 设置超时时间为90秒
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L); // 允许重定向
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
