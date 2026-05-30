@@ -94,7 +94,7 @@ void parse_data(Data* coredata){
 void startApp(char* username){
     curl_global_init(CURL_GLOBAL_DEFAULT);
     if(!logger_init()) {
-        fprintf(stderr, "日志文件初始化失败，使用控制台输出\n");
+        // fprintf(stderr, "日志文件初始化失败，使用控制台输出\n");
     }
    log_message(LOG_INFO,"开始执行任务...");
    

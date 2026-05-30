@@ -23,7 +23,7 @@ int logger_init() {
     }
 
     if(logger == NULL) {
-        fprintf(stderr, "无法打开日志文件 log/log.txt（已尝试多个相对路径），请检查文件权限或运行目录\n");
+        // fprintf(stderr, "无法打开日志文件 log/log.txt（已尝试多个相对路径），请检查文件权限或运行目录\n");
         return 0; 
     }
     global_logger = logger; 
